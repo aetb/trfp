@@ -50,3 +50,60 @@ def remove_trolley_effect(trolley_run):
     
     print '\rFinished removing trolley images from ' + str(length) + ' events.'
     return trolley_effect_removed_df
+
+
+def trolley_run_station_average(corrected_df):
+    station_phi = trfp.STATION_BARCODE_PHI
+    station_edges = trfp.STATION_BARCODE_EDGES
+
+    # tr_phi is not monotonic, so sort by tr_phi
+
+    corrected_df = corrected_df.sort_values(by=['tr_phi'])
+
+    measured_phi = corrected_df['tr_phi'].values
+    measured_extent = (np.roll(measured_phi,-1)-np.roll(measured_phi,1))/2
+    measured_extent[0] = measured_extent[0]+180
+    measured_extent[-1] = measured_extent[-1]+180
+    # print np.max(measured_extent)
+
+    corrected_df['tr_extent'] = pd.Series(measured_extent, index=corrected_df.index)
+    corrected_df = corrected_df.sort_index()
+
+    # for a given station:
+    # create a mask for when trolley is in [low edge, high edge)
+    tr_baseline = np.empty([72,17])
+    fp_baseline = np.empty([72,6])
+    summed_azimuth = np.empty(72)
+    summed_pts = np.empty(72)
+    baseline_time = np.empty(72)
+    tr_baseline[:] = np.nan
+    fp_baseline[:] = np.nan
+    summed_azimuth[:] = np.nan
+    summed_pts[:] = np.nan
+    baseline_time[:] = np.nan
+
+    for st in range(72): 
+        if station_edges[st+1] > station_edges[st]:
+            mask = (corrected_df['tr_phi'] >= station_edges[st]) & (corrected_df['tr_phi'] < station_edges[st+1])
+        else:  # case where we go over the 360 deg line
+            mask = (corrected_df['tr_phi'] >= station_edges[st]) | (corrected_df['tr_phi'] < station_edges[st+1])
+
+        out_df = corrected_df[mask]
+        summed_pts[st] = out_df.shape[0]
+        summed_azimuth[st] = sum(out_df['tr_extent'].values)        
+        baseline_time[st] = sum(out_df.index.values)/summed_pts[st]
+
+        for m in range(17):
+            st_id = 'tr,m'+str(m+1)
+            if sum(out_df['tr_extent'].values) != 0:
+                tr_baseline[st, m] = sum(out_df['tr_extent'].values*out_df[st_id].values)/sum(out_df['tr_extent'].values)
+            else:
+                tr_baseline[st, m] = np.nan
+        for m in range(6):
+            st_id = 'st'+str(st)+',m'+str(m+1)
+            if sum(out_df['tr_extent'].values) != 0:
+                fp_baseline[st, m] = np.mean(out_df[st_id])
+            else:
+                fp_baseline[st, m] = np.nan
+    
+    return tr_baseline, fp_baseline, baseline_time, summed_azimuth, summed_pts

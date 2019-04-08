@@ -3,10 +3,11 @@
 
 import numpy as np
 
-FP_4_X = np.array([0, 3, 0, 3])
-FP_4_Y = np.array([7.7, 7.7, -7.7, -7.7])
-FP_6_X = np.array([-3, 0, 3, -3, 0, 3])
-FP_6_Y = np.array([7.7, 7.7, 7.7, -7.7, -7.7, -7.7])
+FP4_X = np.array([0, 3, 0, 3])
+FP4_Y = np.array([7.7, 7.7, -7.7, -7.7])
+FP6_X = np.array([-3, 0, 3, -3, 0, 3])
+FP6_X_OFFSET = np.array([-4, -1, 2, -4, -1, 2])
+FP6_Y = np.array([7.7, 7.7, 7.7, -7.7, -7.7, -7.7])
 
 TR_X = np.array([0]
                 + [1.75 * np.sin(2*np.pi/4*i)
@@ -33,6 +34,13 @@ STATION_BARCODE_PHI = [350.17, 354.33, 358.84, 4.34, 9.33,
                        279.38, 283.41, 290.19, 293.37, 299.34,
                        304.31, 309.34, 313.29, 320.19, 323.41,
                        329.33, 334.35, 339.35, 343.41]
+
+STATION_BARCODE_EDGES = (STATION_BARCODE_PHI+np.roll(STATION_BARCODE_PHI,1))/2
+if STATION_BARCODE_EDGES[3] >= 180.:  # accounts for wrap around at station 3
+    STATION_BARCODE_EDGES[3] = STATION_BARCODE_EDGES[3]-180.
+else:
+    STATION_BARCODE_EDGES[3] = STATION_BARCODE_EDGES[3]+180.
+STATION_BARCODE_EDGES = np.append(STATION_BARCODE_EDGES, STATION_BARCODE_EDGES[0])
 
 STATION_RING_PHI = [348, 352, 358, 3, 8, 12, 18, 22, 28,
                     33, 38, 42, 48, 52, 58, 63, 68, 72,
@@ -117,3 +125,23 @@ STATION_PROBE_ID = [[0, 1, 2, 18, 19, 20],  # 0
                     [356, 357, 371, 372],  # 69
                     [358, 359, 360, 373, 374, 375],  # 70
                     [361, 362, 376, 377]]  # 71
+
+## Calibration constants from plunging probe.
+
+PLUNGING_PROBE_CALIBRATIONS = [-31.806,  # 0
+                               -37.326,  # 1
+                               -27.731,  # 2
+                               -34.009,  # 3
+                               -29.533,  # 4
+                               -13.879,  # 5
+                               -3.943,  # 6
+                               -42.120,  # 7
+                               -40.291,  # 8
+                               -99.849,  # 9
+                               54.585,  # 10
+                               -8.270,  # 12
+                               3.029,  # 13
+                               -40.572,  # 14
+                               -44.231,  # 15
+                               -100.948,  # 16
+                               50.725]  # 17

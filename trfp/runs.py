@@ -25,6 +25,10 @@ class TrolleyRun(object):
 
         times, tr_freq_interp, tr_phi_interp, fp_freq_interp =\
             self.__time_interpolation()
+        
+        # apply plunging probe calibrations to tr_freq_interp
+        for ii in np.arange(17):
+            tr_freq_interp[:,ii] = tr_freq_interp[:,ii] + trfp.PLUNGING_PROBE_CALIBRATIONS[ii]
 
         cols = ["tr_phi"]\
             + ["tr" + str(i) for i in np.arange(17)]\
@@ -32,7 +36,7 @@ class TrolleyRun(object):
         data = np.append(np.append(tr_phi_interp, tr_freq_interp, axis=1),
                          fp_freq_interp,
                          axis=1)
-        self.interp_data = pd.DataFrame(data, index=times, columns=cols)
+        self.interp_df = pd.DataFrame(data, index=times, columns=cols)
         
         self.moment_df = self.__moment_dataframe()
 
@@ -74,11 +78,11 @@ class TrolleyRun(object):
         """Builds dataframe of field moments."""
 
         # copy the interpolation data for the phi
-        moment_df = self.interp_data['tr_phi'].copy()
+        moment_df = self.interp_df['tr_phi'].copy()
 
         # create the 17 trolley moments at each point in time
         print 'Calculating trolley moments.',
-        temp_df = self.interp_data[['tr' + str(tr)
+        temp_df = self.interp_df[['tr' + str(tr)
                                     for tr in np.arange(17)]].copy()
         tr_st_m = np.zeros([temp_df.shape[0], 17])
 
@@ -94,7 +98,7 @@ class TrolleyRun(object):
         # create the 72*6 fixed probe moments
         for station in np.arange(72):
             print '\rCalculating station ' + str(station) + ' moments.',
-            temp_df = self.interp_data[['fp'+str(fp)
+            temp_df = self.interp_df[['fp'+str(fp)
                                         for fp
                                         in trfp.STATION_PROBE_ID[station]]].copy()
             fp_st_m = np.zeros([temp_df.shape[0], 6])
@@ -146,7 +150,7 @@ class TrolleyRun(object):
         """DOC STRING."""
         sns.set(style="darkgrid")
 
-        ax = sns.relplot(data=self.interp_data[probe], kind='line')
+        ax = sns.relplot(data=self.interp_df[probe], kind='line')
         fig = plt.gcf()
         fig.set_size_inches(14, 8.66)
         xticks = ax.get_xticks()
@@ -158,7 +162,7 @@ class TrolleyRun(object):
         """DOC STRING."""
         sns.set(style="darkgrid")
 
-        pos_data = self.interp_data.loc[:, ['tr_phi', probe]].copy()
+        pos_data = self.interp_df.loc[:, ['tr_phi', probe]].copy()
         if not wrap:
             pos_data['tr_phi'] = np.rad2deg(np.unwrap(np.deg2rad(pos_data['tr_phi'])))
 
@@ -169,7 +173,7 @@ class TrolleyRun(object):
         return fig
 
     
-    
+ 
 class FixedProbeRun(object):
 
     """Class for building DataFrames of fixed frobe runs."""
@@ -184,7 +188,7 @@ class FixedProbeRun(object):
 
         cols = ["fp" + str(i) for i in np.arange(378)]
         data = fp_freq_interp
-        self.interp_data = pd.DataFrame(data, index=times, columns=cols)
+        self.interp_df = pd.DataFrame(data, index=times, columns=cols)
         
         self.moment_df = self.__moment_dataframe()
 
@@ -213,7 +217,7 @@ class FixedProbeRun(object):
         # copy the interpolation data for the index
         station = 0
         print '\rCalculating station ' + str(station) + ' moments.',
-        temp_df = self.interp_data[['fp'+str(fp)
+        temp_df = self.interp_df[['fp'+str(fp)
                                     for fp
                                     in trfp.STATION_PROBE_ID[station]]].copy()
         fp_st_m = np.zeros([temp_df.shape[0], 6])
@@ -230,7 +234,7 @@ class FixedProbeRun(object):
         # create the 72*6 fixed probe moments
         for station in np.arange(1,72):
             print '\rCalculating station ' + str(station) + ' moments.',
-            temp_df = self.interp_data[['fp'+str(fp)
+            temp_df = self.interp_df[['fp'+str(fp)
                                         for fp
                                         in trfp.STATION_PROBE_ID[station]]].copy()
             fp_st_m = np.zeros([temp_df.shape[0], 6])
@@ -282,7 +286,7 @@ class FixedProbeRun(object):
         """DOC STRING."""
         sns.set(style="darkgrid")
 
-        ax = sns.relplot(data=self.interp_data[probe], kind='line')
+        ax = sns.relplot(data=self.interp_df[probe], kind='line')
         fig = plt.gcf()
         fig.set_size_inches(14, 8.66)
         xticks = ax.get_xticks()
