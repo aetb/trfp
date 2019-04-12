@@ -25,7 +25,7 @@ THETA_FP_6 = np.array([np.array([1, 1, 1, 1, 1, 1])/6.,  # dipole
                        np.array([1, 1, 1, -1, -1, -1])/46.2*4.5,  # s quad
                        np.array([1, 0, -1, -1, 0, 1])/-92.4*4.5**2,  # s sext
                        np.array([1, -2, 1, 1, -2, 1])/18.*4.5**2,  # n sext
-                       np.array([1, -2, 1, -1, 2, -1])/-138.6*4.5**3]  # oct
+                       np.array([1, -2, 1, -1, 2, -1])/-138.6*4.5**3]  # NOT oct, no idea what this is
                      )
 
 THETA_FP_4 = np.array([np.array([1, 0, 1, 0])/2.,  # dipole
