@@ -29,9 +29,10 @@ from trfp.matrices import J_4_PROBE_ST37_ST39
 from trfp.matrices import J_4_PROBE_ST41
 
 import trfp.runs
-from trfp.runs import TrolleyRun
-from trfp.runs import FixedProbeRun
+from trfp.runs import Run
 
 import trfp.analysis
 from trfp.analysis import remove_trolley_effect
 from trfp.analysis import trolley_run_station_average
+
+import trfp.uncertainty
