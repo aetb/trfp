@@ -106,7 +106,13 @@ class TrolleyRun(object):
                 if temp_df.shape[1] == 6:
                     fp_st_m[index, :] = np.dot(trfp.THETA_FP_6, temp_df.iloc[index])
                 elif temp_df.shape[1] == 4:
-                    fp_st_m[index, 0:4] = np.dot(trfp.THETA_FP_4, temp_df.iloc[index])
+                    if station == 41:
+                        THETA_FP_4 = trfp.THETA_FP_4_ST41
+                    elif (station == 37) | (station == 39):
+                        THETA_FP_4 = trfp.THETA_FP_4_ST37_ST39
+                    else:
+                        THETA_FP_4 = trfp.THETA_FP_4
+                    fp_st_m[index, 0:4] = np.dot(THETA_FP_4, temp_df.iloc[index])
                     fp_st_m[index, 4:6] = [np.nan, np.nan]
             moment_df = pd.concat([moment_df,
                                    pd.DataFrame(fp_st_m, index=temp_df.index,
@@ -242,7 +248,13 @@ class FixedProbeRun(object):
                 if temp_df.shape[1] == 6:
                     fp_st_m[index, :] = np.dot(trfp.THETA_FP_6, temp_df.iloc[index])
                 elif temp_df.shape[1] == 4:
-                    fp_st_m[index, 0:4] = np.dot(trfp.THETA_FP_4, temp_df.iloc[index])
+                    if station == 41:
+                        THETA_FP_4 = trfp.THETA_FP_4_ST41
+                    elif (station == 37) | (station == 39):
+                        THETA_FP_4 = trfp.THETA_FP_4_ST37_ST39
+                    else:
+                        THETA_FP_4 = trfp.THETA_FP_4
+                    fp_st_m[index, 0:4] = np.dot(THETA_FP_4, temp_df.iloc[index])
                     fp_st_m[index, 4:6] = [np.nan, np.nan]
             moment_df = pd.concat([moment_df,
                                    pd.DataFrame(fp_st_m, index=temp_df.index,

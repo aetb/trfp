@@ -41,6 +41,7 @@ def remove_trolley_effect(trolley_run):
             
             unwrap_filled_df = unwrap_mask_df.copy()
             temp = unwrap_filled_df.rolling(int(100),win_type='triang',min_periods=1,center=True).mean()
+            temp = temp.rolling(int(100),win_type='triang',min_periods=1,center=True).mean()
             unwrap_filled_df[st_m] = unwrap_filled_df[st_m].mask(mask, temp[st_m])
             
             length = raw_data.shape[0]

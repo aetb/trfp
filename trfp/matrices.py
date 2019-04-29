@@ -29,10 +29,26 @@ THETA_FP_6 = np.array([np.array([1, 1, 1, 1, 1, 1])/6.,  # dipole
                      )
 
 THETA_FP_4 = np.array([np.array([1, 0, 1, 0])/2.,  # dipole
-                       np.array([1, -1, 1, -1])/-6.*4.5,  # n quad
+                       np.array([1, -1, -1, 1])/-6.*4.5,  # n quad
                        np.array([1, 1, -1, -1])/30.8*4.5,  # s quad
-                       np.array([1, -1, -1, 1])/-46.2*4.5**2]  # sext
+                       np.array([1, -1, 1, -1])/46.2*4.5**2]  # sext
                      )
+
+# four probe stations in the garage (Yoke , stations 37, 39, 41) have a different arrangement of probes
+# STATION 37, 39
+# TM, TO, BI, BM
+THETA_FP_4_ST37_ST39 = np.array([np.array([1, 0, 0, 1])/2.,  #dipole
+                              np.array([-1, 1, -1, 1])/6.*4.5,  # n quad
+                              np.array([1, 1, -1, -1])/30.8*4.5,  # s quad
+                              np.array([-1, 1, 1, -1])/46.2*4.5**2]  # sext?
+                            )
+# STATION 41
+# TO, TM, BI, BM
+THETA_FP_4_ST41 = np.array([np.array([0, 1, 0, 1])/2.,  #dipole
+                              np.array([1, -1, -1, 1])/6.*4.5,  # n quad
+                              np.array([1, 1, -1, -1])/30.8*4.5,  # s quad
+                              np.array([1, -1, 1, -1])/46.2*4.5**2]  # sext?
+                            )
 
 __MULTIPOLE_ORDER = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8]
 __MULTIPOLE_SKEW = [0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
@@ -46,7 +62,7 @@ THETA_TR = np.linalg.pinv(np.transpose(np.array([__multipole(__MULTIPOLE_ORDER[i
 
 # the following are the Jacobians that take fixed probe to trolley
 
-def __jacobian_calc(probes, offset):
+def __jacobian_calc(probes, offset=False, weird_station=-1):
     tr_x = trfp.TR_X
     tr_y = trfp.TR_Y
     if probes == 6:
@@ -58,8 +74,15 @@ def __jacobian_calc(probes, offset):
         fp_y = trfp.FP6_Y
     else:
         probes = 4
-        THETA_FP = THETA_FP_4
-        fp_x = trfp.FP4_X
+        if weird_station == 41:
+            THETA_FP = THETA_FP_4_ST41
+            fp_x = trfp.FP4_X_ST41
+        elif (weird_station == 37) | (weird_station == 39):
+            THETA_FP = THETA_FP_4_ST37_ST39
+            fp_x = trfp.FP4_X_ST37_ST39
+        else:
+            THETA_FP = THETA_FP_4
+            fp_x = trfp.FP4_X
         fp_y = trfp.FP4_Y
         
     As = np.arange(-10,10)
@@ -95,5 +118,9 @@ J_6_PROBE = np.linalg.inv(__jacobian_calc(6, False)[0:5, 0:5])
 J_6_PROBE_OFFSET = np.linalg.inv(__jacobian_calc(6, True)[0:5, 0:5])
 
 J_4_PROBE = np.linalg.inv(__jacobian_calc(4, False))
+
+J_4_PROBE_ST37_ST39 = np.linalg.inv(__jacobian_calc(4, False, weird_station=37))
+# These last 2 should be equal, because the geometry is the same.
+J_4_PROBE_ST41 = np.linalg.inv(__jacobian_calc(4, False, weird_station=41))
 
 

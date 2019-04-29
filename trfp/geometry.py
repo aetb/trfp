@@ -4,7 +4,17 @@
 import numpy as np
 
 FP4_X = np.array([0, 3, 0, 3])
+
+# STATION 41
+# TO, TM, BI, BM
+FP4_X_ST41 = np.array([3, 0, -3, 0])
+
+# STATION 37, 39
+# TM, TO, BI, BM
+FP4_X_ST37_ST39 = np.array([0, 3, -3, 0])
+
 FP4_Y = np.array([7.7, 7.7, -7.7, -7.7])
+
 FP6_X = np.array([-3, 0, 3, -3, 0, 3])
 FP6_X_OFFSET = np.array([-4, -1, 2, -4, -1, 2])
 FP6_Y = np.array([7.7, 7.7, 7.7, -7.7, -7.7, -7.7])
