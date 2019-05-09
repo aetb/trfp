@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
+import scipy
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -26,8 +27,10 @@ class Run(object):
         if tr_run_temp.getEntries() != 0:
             self.trolley = True
             self.tr_run = tr_run_temp
+            print 'Trolley run.'
         else:
             self.trolley = False
+            print 'Fixed probe run.'
         
         self.fp_run = gm2.FixedProbe([run])
 
@@ -54,7 +57,6 @@ class Run(object):
 
     def __time_interpolation_tr(self):
         tr_time, tr_phi, tr_freq = self.tr_run.getBasics(mode_phi=2)
-        tr_phi = np.rad2deg(np.unwrap(np.deg2rad(tr_phi)))
         _, fp_time, fp_freq = self.fp_run.getBasics()
         tr_time /= 1.0e9  # timestamps come in nanoseconds, convert to seconds
         fp_time /= 1.0e9
@@ -64,25 +66,80 @@ class Run(object):
 
         times = np.arange(np.ceil(np.max([tr_time[tr_indices][0, 16],
                                           fp_time[fp_indices][0, 377]])),
-                          np.floor(np.min([fp_time[fp_indices][-1, 0],
+                          np.floor(np.min([tr_time[tr_indices][-1, 0],
                                            fp_time[fp_indices][-1, 0]])) + 1,
                           1)
+        steps = 100
+        rate = 1./steps
+        offset = steps/2
+
+        integration_times = np.arange(times[0], times[-1], rate)
 
         tr_freq_interp = np.zeros([times.size, 17])
         tr_phi_interp = np.zeros([times.size, 1])
         fp_freq_interp = np.zeros([times.size, 378])
+        
+        # integrate trolley phi measurements
+        # unwrap trolley measurement
+        print 'Interpolating trolley position.'
+        index = np.arange(tr_phi[1:,0].size)[np.abs(tr_phi[1:,0]-tr_phi[0:-1,0]) > 300]
+        if index.size == 1:
+            index = int(index)
+            tr_phi_out = tr_phi[:,0].copy()
+            tr_phi_out[index+1:] = tr_phi_out[index+1:] + np.sign(tr_phi_out[index]-tr_phi_out[index+1])*360
+        elif index.size == 0:
+            tr_phi_out = tr_phi[:,0].copy()
+        else:
+            raise TrolleyPositionError('More than one wrap around.')
+        
+        phi_interp = scipy.interpolate.interp1d(tr_time[:,0], tr_phi_out, kind='cubic')
+        integration_points = phi_interp(integration_times)
 
-        for i in np.arange(17):
-            tr_freq_interp[:, i] = interp1d(tr_time[tr_indices][:, i],
-                                            tr_freq[tr_indices][:, i],
-                                            kind='slinear')(times)
-            tr_phi_interp[:, 0] += interp1d(tr_time[tr_indices][:, i],
-                                            tr_phi[tr_indices][:, i],
-                                            kind='slinear')(times)/17.
-        for i in np.arange(378):
-            fp_freq_interp[:, i] = interp1d(fp_time[fp_indices][:, i],
-                                            fp_freq[fp_indices][:, i],
-                                            kind='slinear')(times)
+        cumulative_integration = scipy.integrate.cumtrapz(integration_points, integration_times,
+                                                         initial=0) + integration_points[0]
+
+        indices = [steps*i + offset for i in range(integration_times.size/steps)]
+
+        output = np.diff(cumulative_integration[indices])
+        output = np.append(np.array([integration_points[0]]), output)
+        output = np.append(output, np.array([integration_points[-1]]))
+
+        tr_phi_interp[:,0] = output
+        tr_phi_interp = tr_phi_interp%360
+        
+        # integrate each trolley probe
+        print 'Interpolating trolley frequencies.'
+        for probe in range(17):
+            probe_interp = scipy.interpolate.interp1d(tr_time[:,probe], tr_freq[:,probe], kind='cubic')
+            integration_points = probe_interp(integration_times)
+
+            cumulative_integration = scipy.integrate.cumtrapz(integration_points, integration_times,
+                                                             initial=0) + integration_points[0]
+
+            indices = [steps*i + offset for i in range(integration_times.size/steps)]
+
+            output = np.diff(cumulative_integration[indices])
+            output = np.append(np.array([integration_points[0]]), output)
+            output = np.append(output, np.array([integration_points[-1]]))
+
+            tr_freq_interp[:,probe] = output
+        
+        # integrate each fixed probe
+        print 'Interpolating fixed probe frequencies.'
+        for probe in range(378):
+            probe_interp = scipy.interpolate.interp1d(fp_time[:,probe], fp_freq[:,probe], kind='cubic')
+            integration_points = probe_interp(integration_times)
+
+            cumulative_integration = scipy.integrate.cumtrapz(integration_points, integration_times,
+                                                             initial=0) + integration_points[0]
+
+            indices = [steps*i + offset for i in range(integration_times.size/steps)]
+
+            output = np.diff(cumulative_integration[indices])
+            output = np.append(np.array([integration_points[0]]), output)
+            output = np.append(output, np.array([integration_points[-1]]))
+
+            fp_freq_interp[:,probe] = output
 
         return times, tr_freq_interp, tr_phi_interp, fp_freq_interp
     
@@ -90,19 +147,35 @@ class Run(object):
         _, fp_time, fp_freq = self.fp_run.getBasics()
         fp_time /= 1.0e9  # timestamps come in nanoseconds, convert to seconds
 
-        fp_indices = np.mean(fp_freq, 1) > 0
+        fp_indices = np.arange(len(fp_freq)) >= 3  # drop first 3 fixed probe events
 
         times = np.arange(np.ceil(fp_time[fp_indices][0, 377]),
                           np.floor(fp_time[fp_indices][-1, 0]) + 1,
-                          2)
+                          1)  # NOTE THIS IS 1 SECOND NOW, DOESN'T MATTER BECAUSE OF INTEGRATION METHOD
+        steps = 100
+        rate = 1./steps
+        offset = steps/2
+
+        integration_times = np.arange(times[0], times[-1], rate)
 
         fp_freq_interp = np.zeros([times.size, 378])
+        print 'Interpolating fixed probe frequencies.'
+        
+        for probe in range(378):
+            probe_interp = scipy.interpolate.interp1d(fp_time[:,probe], fp_freq[:,probe], kind='cubic')
+            integration_points = probe_interp(integration_times)
 
-        for i in np.arange(378):
-            fp_freq_interp[:, i] = interp1d(fp_time[fp_indices][:, i],
-                                            fp_freq[fp_indices][:, i],
-                                            kind='slinear')(times)
+            cumulative_integration = scipy.integrate.cumtrapz(integration_points, integration_times,
+                                                             initial=0) + integration_points[0]
 
+            indices = [steps*i + offset for i in range(integration_times.size/steps)]
+
+            output = np.diff(cumulative_integration[indices])
+            output = np.append(np.array([integration_points[0]]), output)
+            output = np.append(output, np.array([integration_points[-1]]))
+
+            fp_freq_interp[:,probe] = output
+            
         return times, fp_freq_interp
 
 
@@ -158,7 +231,93 @@ class Run(object):
         interp_key = "run_" + str(self.run) + "_interp_df"
         moment_key = "run_" + str(self.run) + "_moment_df"
         
-        print "Saving run " + str(run) + '.'
+        print "Saving run " + str(self.run) + '.'
         
         self.interp_df.to_hdf(file_name, key=interp_key)
         self.moment_df.to_hdf(file_name, key=moment_key)
+        
+#     # The following are slower methods for time-grid interpolation
+    
+#     def __time_interpolation_tr(self):
+#         tr_time, tr_phi, tr_freq = self.tr_run.getBasics(mode_phi=2)
+#         _, fp_time, fp_freq = self.fp_run.getBasics()
+#         tr_time /= 1.0e9  # timestamps come in nanoseconds, convert to seconds
+#         fp_time /= 1.0e9
+
+#         tr_indices = np.arange(len(tr_freq)) >= 10  # drop first 10 trolley events
+#         fp_indices = np.arange(len(fp_freq)) >= 3  # drop first 3 fixed probe events
+
+#         times = np.arange(np.ceil(np.max([tr_time[tr_indices][0, 16],
+#                                           fp_time[fp_indices][0, 377]])),
+#                           np.floor(np.min([fp_time[fp_indices][-1, 0],
+#                                            fp_time[fp_indices][-1, 0]])) + 1,
+#                           1)
+#         time_edges = (times + np.roll(times,1))/2
+#         time_edges[0] = times[0]
+#         time_edges = np.append(time_edges, times[-1])
+#         delta_ts = time_edges[1:] - time_edges[0:-1]
+
+#         tr_freq_interp = np.zeros([times.size, 17])
+#         tr_phi_interp = np.zeros([times.size, 1])
+#         fp_freq_interp = np.zeros([times.size, 378])
+        
+#         # integrate trolley phi measurements
+#         print 'Interpolating trolley phi.',
+#         phi_interp = scipy.interpolate.interp1d(tr_time[:,0], tr_phi[:,0], kind='cubic')
+#         for t in np.arange(times.shape[0]):
+#             tr_phi_interp[t,0], _ = scipy.integrate.fixed_quad(phi_interp, time_edges[t], time_edges[t+1], n=50)
+#             # n=50 for ppb level accuracy
+#         tr_phi_interp[:,0] /= delta_ts
+#         print '\n'
+#         tr_phi_interp = tr_phi_interp%360
+        
+#         # integrate each trolley probe
+#         for tr in np.arange(17):
+#             print '\rInterpolating trolley probe '+str(tr)+ '.',
+#             probe_interp = scipy.interpolate.interp1d(tr_time[:,tr], tr_freq[:,tr], kind='cubic')
+#             for t in np.arange(times.shape[0]):
+#                 tr_freq_interp[t, tr], _ = scipy.integrate.fixed_quad(probe_interp, time_edges[t], time_edges[t+1], n=50)
+#                 # n=50 for ppb level accuracy
+#             tr_freq_interp[:,tr] /= delta_ts
+#         print '\n'
+        
+#         # integrate each fixed probe
+#         for fp in np.arange(378):
+#             print '\rInterpolating fixed probe '+str(fp)+ '.',
+#             probe_interp = scipy.interpolate.interp1d(fp_time[:,fp], fp_freq[:,fp], kind='cubic')
+#             for t in np.arange(times.shape[0]):
+#                 fp_freq_interp[t, fp], _ = scipy.integrate.fixed_quad(probe_interp, time_edges[t], time_edges[t+1], n=50)
+#                 # n=50 for ppb level accuracy
+#             fp_freq_interp[:,fp] /= delta_ts
+#         print '\n'
+
+#         return times, tr_freq_interp, tr_phi_interp, fp_freq_interp
+    
+#     def __time_interpolation_fp(self):
+#         _, fp_time, fp_freq = self.fp_run.getBasics()
+#         fp_time /= 1.0e9  # timestamps come in nanoseconds, convert to seconds
+
+#         fp_indices = np.mean(fp_freq, 1) > 0
+
+#         times = np.arange(np.ceil(fp_time[fp_indices][0, 377]),
+#                           np.floor(fp_time[fp_indices][-1, 0]) + 1,
+#                           2)
+#         time_edges = (times + np.roll(times,1))/2
+#         time_edges[0] = times[0]
+#         time_edges = np.append(time_edges, times[-1])
+#         delta_ts = time_edges[1:] - time_edges[0:-1]
+
+#         fp_freq_interp = np.zeros([times.size, 378])
+
+#         # integrate each fixed probe
+#         for fp in np.arange(378):
+#             print '\rInterpolating fixed probe '+str(fp)+ '.',
+#             probe_interp = scipy.interpolate.interp1d(fp_time[:,fp], fp_freq[:,fp], kind='cubic')
+#             for t in np.arange(times.shape[0]):
+#                 fp_freq_interp[t, fp], _ = scipy.integrate.fixed_quad(probe_interp, time_edges[t], time_edges[t+1], n=50)
+#                 # n=50 for ppb level accuracy
+#             fp_freq_interp[:,fp] /= delta_ts
+#         print '\n'
+
+#         return times, fp_freq_interp
+    
