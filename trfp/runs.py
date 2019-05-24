@@ -92,7 +92,7 @@ class Run(object):
         else:
             raise TrolleyPositionError('More than one wrap around.')
         
-        phi_interp = scipy.interpolate.interp1d(tr_time[:,0], tr_phi_out, kind='cubic')
+        phi_interp = scipy.interpolate.interp1d(tr_time[:,0], tr_phi_out, kind='slinear')
         integration_points = phi_interp(integration_times)
 
         cumulative_integration = scipy.integrate.cumtrapz(integration_points, integration_times,

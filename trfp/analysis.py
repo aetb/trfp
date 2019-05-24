@@ -13,11 +13,11 @@ import trfp
 from datetime import datetime
 import pytz
 
-def remove_trolley_effect(trolley_run):
+def remove_trolley_effect(trolley_moment_df):
     '''DOC STRING'''
     barcode = trfp.STATION_BARCODE_PHI
     
-    trolley_effect_removed_df = trolley_run.moment_df.copy()
+    trolley_effect_removed_df = trolley_moment_df.copy()
     
     for st in range(72):
         print '\rRemoving trolley image from station ' + str(st) + '.',
@@ -25,7 +25,7 @@ def remove_trolley_effect(trolley_run):
             st_m = 'st' + str(st) + ",m" + str(m)
             
             # Unwrap the fixed probe data versus trolley position
-            raw_data = trolley_run.moment_df[['tr_phi', st_m]].copy()
+            raw_data = trolley_moment_df[['tr_phi', st_m]].copy()
             raw_low = raw_data.copy()
             raw_high = raw_data.copy()
             raw_low['tr_phi'] = raw_low['tr_phi'] - 360
