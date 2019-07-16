@@ -136,6 +136,31 @@ STATION_PROBE_ID = [[0, 1, 2, 18, 19, 20],  # 0
                     [358, 359, 360, 373, 374, 375],  # 70
                     [361, 362, 376, 377]]  # 71
 
+STATION_PROBE_NUMBER = [len(probes) for probes in STATION_PROBE_ID]
+
+STATION_BARCODE_PHI_6 = []
+for ii in range(72):
+    if STATION_PROBE_NUMBER[ii] == 6:
+        STATION_BARCODE_PHI_6.append(STATION_BARCODE_PHI[ii])
+        
+__EDGES_6 = (STATION_BARCODE_PHI_6+np.roll(STATION_BARCODE_PHI_6,1))/2
+if __EDGES_6[3] >= 180.:  # accounts for wrap around at station 3
+    __EDGES_6[3] = __EDGES_6[3]-180.
+else:
+    __EDGES_6[3] = __EDGES_6[3]+180.
+__EDGES_6 = np.append(__EDGES_6, __EDGES_6[0])
+
+STATION_BARCODE_EDGES_6 = []
+num_6_probe_stations = 0
+for ii in range(72):
+    if STATION_PROBE_NUMBER[ii] == 6:
+        STATION_BARCODE_EDGES_6.append(__EDGES_6[num_6_probe_stations])
+        num_6_probe_stations += 1
+    else:
+        STATION_BARCODE_EDGES_6.append(__EDGES_6[num_6_probe_stations])
+STATION_BARCODE_EDGES_6.append(STATION_BARCODE_EDGES_6[0])
+STATION_BARCODE_EDGES_6 = np.round(STATION_BARCODE_EDGES_6,3)
+
 ## Calibration constants from plunging probe.
 
 # OLD VALUES

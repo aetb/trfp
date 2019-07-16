@@ -57,9 +57,14 @@ class Run(object):
 
     def __time_interpolation_tr(self):
         tr_time, tr_phi, tr_freq = self.tr_run.getBasics(mode_phi=2)
-        _, fp_time, fp_freq = self.fp_run.getBasics()
+        fp_time, fp_freq, fp_qual = self.fp_run.getBasics()
         tr_time /= 1.0e9  # timestamps come in nanoseconds, convert to seconds
         fp_time /= 1.0e9
+        
+        fp_qual[fp_qual == 2**16] = 0
+        fp_qual[fp_qual == 2**8] = 0
+
+        fp_freq[fp_qual > 0] = np.nan  # veto bad fids
 
         tr_indices = np.arange(len(tr_freq)) >= 10  # drop first 10 trolley events
         fp_indices = np.arange(len(fp_freq)) >= 3  # drop first 3 fixed probe events
@@ -127,8 +132,8 @@ class Run(object):
         # integrate each fixed probe
         print 'Interpolating fixed probe frequencies.'
         for probe in range(378):
-            probe_interp = scipy.interpolate.interp1d(fp_time[:,probe], fp_freq[:,probe], kind='cubic')
-            integration_points = probe_interp(integration_times)
+            not_nan = ~np.isnan(fp_freq[:,probe])
+            integration_points = np.interp(integration_times, fp_time[:,probe][not_nan], fp_freq[:,probe][not_nan])
 
             cumulative_integration = scipy.integrate.cumtrapz(integration_points, integration_times,
                                                              initial=0) + integration_points[0]
@@ -144,10 +149,15 @@ class Run(object):
         return times, tr_freq_interp, tr_phi_interp, fp_freq_interp
     
     def __time_interpolation_fp(self):
-        _, fp_time, fp_freq = self.fp_run.getBasics()
+        fp_time, fp_freq, fp_qual = self.fp_run.getBasics()
         fp_time /= 1.0e9  # timestamps come in nanoseconds, convert to seconds
+        
+        fp_qual[fp_qual == 2**16] = 0
+        fp_qual[fp_qual == 2**8] = 0
+        
+        fp_freq[fp_qual > 0] = np.nan  # veto bad fids
 
-        fp_indices = np.arange(len(fp_freq)) >= 3  # drop first 3 fixed probe events
+        fp_indices = np.arange(len(fp_freq)) >= 1  # drop first 3 fixed probe events
 
         times = np.arange(np.ceil(fp_time[fp_indices][0, 377]),
                           np.floor(fp_time[fp_indices][-1, 0]) + 1,
@@ -158,12 +168,12 @@ class Run(object):
 
         integration_times = np.arange(times[0], times[-1], rate)
 
-        fp_freq_interp = np.zeros([times.size, 378])
+        fp_freq_interp = np.empty([times.size, 378])
         print 'Interpolating fixed probe frequencies.'
         
         for probe in range(378):
-            probe_interp = scipy.interpolate.interp1d(fp_time[:,probe], fp_freq[:,probe], kind='cubic')
-            integration_points = probe_interp(integration_times)
+            not_nan = ~np.isnan(fp_freq[:,probe])
+            integration_points = np.interp(integration_times, fp_time[:,probe][not_nan], fp_freq[:,probe][not_nan])
 
             cumulative_integration = scipy.integrate.cumtrapz(integration_points, integration_times,
                                                              initial=0) + integration_points[0]

@@ -12,8 +12,11 @@ from trfp.geometry import TR_X
 from trfp.geometry import TR_Y
 from trfp.geometry import STATION_BARCODE_PHI
 from trfp.geometry import STATION_BARCODE_EDGES
+from trfp.geometry import STATION_BARCODE_PHI_6
+from trfp.geometry import STATION_BARCODE_EDGES_6
 from trfp.geometry import STATION_RING_PHI
 from trfp.geometry import STATION_PROBE_ID
+from trfp.geometry import STATION_PROBE_NUMBER
 from trfp.geometry import PLUNGING_PROBE_CALIBRATIONS
 
 import trfp.matrices

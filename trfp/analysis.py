@@ -15,6 +15,7 @@ import pytz
 
 def remove_trolley_effect(trolley_moment_df):
     '''DOC STRING'''
+    veto_extent = 25
     barcode = trfp.STATION_BARCODE_PHI
     
     trolley_effect_removed_df = trolley_moment_df.copy()
@@ -33,15 +34,23 @@ def remove_trolley_effect(trolley_moment_df):
             unwrap_nomask_df = pd.concat([raw_low, raw_data, raw_high])
             
             unwrap_mask_df = unwrap_nomask_df.copy()
-            mask = ((unwrap_nomask_df['tr_phi']>barcode[st]-2) & (unwrap_nomask_df['tr_phi']<barcode[st]+5) |
-                    (unwrap_nomask_df['tr_phi']>barcode[st]-2-360) & (unwrap_nomask_df['tr_phi']<barcode[st]+5-360) |
-                    (unwrap_nomask_df['tr_phi']>barcode[st]-2+360) & (unwrap_nomask_df['tr_phi']<barcode[st]+5+360))
+#             mask = ((unwrap_nomask_df['tr_phi']>barcode[st]-2) & (unwrap_nomask_df['tr_phi']<barcode[st]+5) |
+#                     (unwrap_nomask_df['tr_phi']>barcode[st]-2-360) & (unwrap_nomask_df['tr_phi']<barcode[st]+5-360) |
+#                     (unwrap_nomask_df['tr_phi']>barcode[st]-2+360) & (unwrap_nomask_df['tr_phi']<barcode[st]+5+360))
+            veto_adjust = (veto_extent-7)/2
+            mask = (  (unwrap_nomask_df['tr_phi']>barcode[st]-2-veto_adjust)
+                       & (unwrap_nomask_df['tr_phi']<barcode[st]+5+veto_adjust)
+                    | (unwrap_nomask_df['tr_phi']>barcode[st]-2-veto_adjust-360)
+                       & (unwrap_nomask_df['tr_phi']<barcode[st]+5+veto_adjust-360)
+                    | (unwrap_nomask_df['tr_phi']>barcode[st]-2-veto_adjust+360)
+                       & (unwrap_nomask_df['tr_phi']<barcode[st]+5+veto_adjust+360))
+            
             unwrap_mask_df[st_m] = unwrap_nomask_df[st_m].mask(mask)
             unwrap_mask_df['tr_phi'] = unwrap_nomask_df['tr_phi']
             
             unwrap_filled_df = unwrap_mask_df.copy()
-            temp = unwrap_filled_df.rolling(int(100),win_type='triang',min_periods=1,center=True).mean()
-            temp = temp.rolling(int(100),win_type='triang',min_periods=1,center=True).mean()
+            temp = unwrap_filled_df.rolling(int(500),win_type='triang',min_periods=1,center=True).mean()
+            temp = temp.rolling(int(500),win_type='triang',min_periods=1,center=True).mean()
             unwrap_filled_df[st_m] = unwrap_filled_df[st_m].mask(mask, temp[st_m])
             
             length = raw_data.shape[0]

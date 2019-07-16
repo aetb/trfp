@@ -29,9 +29,9 @@ THETA_FP_6 = np.array([np.array([1, 1, 1, 1, 1, 1])/6.,  # dipole
                      )
 
 THETA_FP_4 = np.array([np.array([1, 0, 1, 0])/2.,  # dipole
-                       np.array([1, -1, -1, 1])/-6.*4.5,  # n quad
+                       np.array([1, -1, 1, -1])/-6.*4.5,  # n quad
                        np.array([1, 1, -1, -1])/30.8*4.5,  # s quad
-                       np.array([1, -1, 1, -1])/46.2*4.5**2]  # sext
+                       np.array([1, -1, -1, 1])/46.2*4.5**2]  # sext
                      )
 
 # four probe stations in the garage (Yoke , stations 37, 39, 41) have a different arrangement of probes
