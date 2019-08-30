@@ -4,6 +4,8 @@
 *.pyc
 *.h5
 *.png
-*.dat
-*.csv
 *.pdf
+utility_files/*.txt
+utility_files/*.csv
+utility_files/*.dat
+utility_files/*
