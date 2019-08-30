@@ -1,7 +1,22 @@
-"""This module constains constants about the geomery of the experiment.
-"""
+#!/usr/bin/env python
+# coding: utf-8
+
+# # Geometry
+# Contains constants encoding the geometry of the g-2 probes and magnet.
+
+# In[ ]:
+
+
+"""This module constains constants about the geometry of the experiment."""
 
 import numpy as np
+
+
+# ## Probe positions
+# In-slice positions of the fixed probes and trolley probes.
+
+# In[ ]:
+
 
 FP4_X = np.array([0, 3, 0, 3])
 
@@ -30,27 +45,15 @@ TR_Y = np.array([0]
                 + [-3.5 * np.cos(2*np.pi/12*i)
                    for i in np.arange(12)])
 
-STATION_BARCODE_PHI = [350.17, 354.33, 358.84, 4.34, 9.33,
-                       14.23, 20.2, 23.32, 29.33, 34.33, 39.33,
-                       43.31, 50.2, 53.31, 59.34, 64.33, 69.34,
-                       73.3, 80.17, 83.32, 89.31, 94.33, 99.31,
-                       103.3, 110.19, 113.31, 119.34, 124.32,
-                       129.3, 133.27, 140.21, 143.38, 149.34,
-                       154.33, 159.36, 163.31, 170.19, 173.39,
-                       179.36, 184.35, 189.36, 193.31, 200.17,
-                       203.38, 209.34, 214.31, 219.34, 223.32,
-                       230.22, 233.42, 239.36, 244.34, 249.38,
-                       253.34, 260.2, 263.47, 269.35, 274.34,
-                       279.38, 283.41, 290.19, 293.37, 299.34,
-                       304.31, 309.34, 313.29, 320.19, 323.41,
-                       329.33, 334.35, 339.35, 343.41]
 
-STATION_BARCODE_EDGES = (STATION_BARCODE_PHI+np.roll(STATION_BARCODE_PHI,1))/2
-if STATION_BARCODE_EDGES[3] >= 180.:  # accounts for wrap around at station 3
-    STATION_BARCODE_EDGES[3] = STATION_BARCODE_EDGES[3]-180.
-else:
-    STATION_BARCODE_EDGES[3] = STATION_BARCODE_EDGES[3]+180.
-STATION_BARCODE_EDGES = np.append(STATION_BARCODE_EDGES, STATION_BARCODE_EDGES[0])
+# ## Station-probe information
+# Which probes are in which station.
+# 
+# Also `STATION_RIGHT_PHI`, which is the (incorrect) nominal positions of the stations.
+# Don't use `STATION_RIGHT_PHI`. It's just here for posterity.
+
+# In[ ]:
+
 
 STATION_RING_PHI = [348, 352, 358, 3, 8, 12, 18, 22, 28,
                     33, 38, 42, 48, 52, 58, 63, 68, 72,
@@ -138,49 +141,59 @@ STATION_PROBE_ID = [[0, 1, 2, 18, 19, 20],  # 0
 
 STATION_PROBE_NUMBER = [len(probes) for probes in STATION_PROBE_ID]
 
-STATION_BARCODE_PHI_6 = []
-for ii in range(72):
-    if STATION_PROBE_NUMBER[ii] == 6:
-        STATION_BARCODE_PHI_6.append(STATION_BARCODE_PHI[ii])
-        
-__EDGES_6 = (STATION_BARCODE_PHI_6+np.roll(STATION_BARCODE_PHI_6,1))/2
-if __EDGES_6[3] >= 180.:  # accounts for wrap around at station 3
-    __EDGES_6[3] = __EDGES_6[3]-180.
+
+# ## Station barcode positions
+# Position of the fixed probe stations.
+# Calculated by using the trolley footprint.
+# Lined up with the trolley probe active regions in the barcode basis.
+
+# In[ ]:
+
+
+STATION_BARCODE_PHI = [350.17, 354.33, 358.84, 4.34, 9.33,
+                       14.23, 20.2, 23.32, 29.33, 34.33, 39.33,
+                       43.31, 50.2, 53.31, 59.34, 64.33, 69.34,
+                       73.3, 80.17, 83.32, 89.31, 94.33, 99.31,
+                       103.3, 110.19, 113.31, 119.34, 124.32,
+                       129.3, 133.27, 140.21, 143.38, 149.34,
+                       154.33, 159.36, 163.31, 170.19, 173.39,
+                       179.36, 184.35, 189.36, 193.31, 200.17,
+                       203.38, 209.34, 214.31, 219.34, 223.32,
+                       230.22, 233.42, 239.36, 244.34, 249.38,
+                       253.34, 260.2, 263.47, 269.35, 274.34,
+                       279.38, 283.41, 290.19, 293.37, 299.34,
+                       304.31, 309.34, 313.29, 320.19, 323.41,
+                       329.33, 334.35, 339.35, 343.41]
+
+STATION_BARCODE_EDGES = (STATION_BARCODE_PHI+np.roll(STATION_BARCODE_PHI,1))/2
+if STATION_BARCODE_EDGES[3] >= 180.:  # accounts for wrap around at station 3
+    STATION_BARCODE_EDGES[3] = STATION_BARCODE_EDGES[3]-180.
 else:
-    __EDGES_6[3] = __EDGES_6[3]+180.
-__EDGES_6 = np.append(__EDGES_6, __EDGES_6[0])
+    STATION_BARCODE_EDGES[3] = STATION_BARCODE_EDGES[3]+180.
+STATION_BARCODE_EDGES = np.append(STATION_BARCODE_EDGES, STATION_BARCODE_EDGES[0])
 
-STATION_BARCODE_EDGES_6 = []
-num_6_probe_stations = 0
+STATION_LIST_6_PROBES = []
 for ii in range(72):
     if STATION_PROBE_NUMBER[ii] == 6:
-        STATION_BARCODE_EDGES_6.append(__EDGES_6[num_6_probe_stations])
-        num_6_probe_stations += 1
-    else:
-        STATION_BARCODE_EDGES_6.append(__EDGES_6[num_6_probe_stations])
-STATION_BARCODE_EDGES_6.append(STATION_BARCODE_EDGES_6[0])
-STATION_BARCODE_EDGES_6 = np.round(STATION_BARCODE_EDGES_6,3)
+        STATION_LIST_6_PROBES.append(ii)
 
-## Calibration constants from plunging probe.
+STATION_BARCODE_PHI_6 = [STATION_BARCODE_PHI[st] for st in STATION_LIST_6_PROBES]
 
-# OLD VALUES
-# PLUNGING_PROBE_CALIBRATIONS = [-31.806,  # 0
-#                                -37.326,  # 1
-#                                -27.731,  # 2
-#                                -34.009,  # 3
-#                                -29.533,  # 4
-#                                -13.879,  # 5
-#                                -3.943,  # 6
-#                                -42.120,  # 7
-#                                -40.291,  # 8
-#                                -99.849,  # 9
-#                                54.585,  # 10
-#                                -8.270,  # 11
-#                                3.029,  # 12
-#                                -40.572,  # 13
-#                                -44.231,  # 14
-#                                -100.948,  # 15
-#                                50.725]  # 16
+STATION_BARCODE_EDGES_6 = (STATION_BARCODE_PHI_6+np.roll(STATION_BARCODE_PHI_6,1))/2
+if STATION_BARCODE_EDGES_6[3] >= 180.:  # accounts for wrap around at station 3
+    STATION_BARCODE_EDGES_6[3] = STATION_BARCODE_EDGES_6[3]-180.
+else:
+    STATION_BARCODE_EDGES_6[3] = STATION_BARCODE_EDGES_6[3]+180.
+STATION_BARCODE_EDGES_6 = np.append(STATION_BARCODE_EDGES_6, STATION_BARCODE_EDGES_6[0])
+
+
+# ## Plunging probe calibrations
+# Provided by D. Flay.
+# Nowhere better to put them.
+# Still blinded.
+
+# In[ ]:
+
 
 PLUNGING_PROBE_CALIBRATIONS = [-31.574,  # 0
                                -37.545,  # 1
@@ -199,3 +212,4 @@ PLUNGING_PROBE_CALIBRATIONS = [-31.574,  # 0
                                -43.37,  # 14
                                -100.348,  # 15
                                51.747]  # 16
+

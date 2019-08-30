@@ -1,3 +1,12 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# # Analysis
+# Contains helper functions and main analysis functions.
+
+# In[ ]:
+
+
 """Contains functions for analyzing trolley and fixed probe runs."""
 
 import numpy as np
@@ -10,8 +19,13 @@ import seaborn as sns
 import gm2
 import trfp
 
-from datetime import datetime
-import pytz
+
+# ## Remove trolley footprint
+# Function that removes the trolley footprint from fixed probe measurements.
+# Uses ring-wide drift as relacement.
+
+# In[ ]:
+
 
 def remove_trolley_effect(trolley_moment_df):
     '''DOC STRING'''
@@ -60,6 +74,12 @@ def remove_trolley_effect(trolley_moment_df):
     
     print '\rFinished removing trolley images from ' + str(length) + ' events.'
     return trolley_effect_removed_df
+
+
+# ## Average fields station-wise during trolley runs
+# Calculates average moments during trolley from for synchronization.
+
+# In[ ]:
 
 
 def trolley_run_station_average(corrected_df):
@@ -117,3 +137,4 @@ def trolley_run_station_average(corrected_df):
                 fp_baseline[st, m] = np.nan
     
     return tr_baseline, fp_baseline, baseline_time, summed_azimuth, summed_pts
+

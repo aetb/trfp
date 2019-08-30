@@ -1,8 +1,26 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# # Matrices
+# 
+# Contains definitions of the matrices for the matrix method
+
+# In[ ]:
+
+
 """A module that contains the various matrices used in the matrix method."""
 
 import numpy as np
 import scipy.optimize
 import trfp
+
+
+# ## Helper functions
+# Dunder function, can't (easily) be used outside of this script.
+# Maybe replace with a helper function file?
+
+# In[ ]:
+
 
 def __multipole(order, skew, strength, x_pos, y_pos):
     """Returns the magnitude of a B-field given multipole parameters
@@ -17,110 +35,90 @@ def __multipole(order, skew, strength, x_pos, y_pos):
         b_magnitude = strength * (r_pos/4.5)**order * np.sin(order*theta)
     return b_magnitude
 
-def __lin_fit(x, a, b):
-    return a + b*x
+
+# ## Moment matrices
+# Transform vectors of frequencies into vectors of moments.
+
+# In[ ]:
+
 
 THETA_FP_6 = np.array([np.array([1, 1, 1, 1, 1, 1])/6.,  # dipole
                        np.array([1, 0, -1, 1, 0, -1])/-12.*4.5,  # n quad
                        np.array([1, 1, 1, -1, -1, -1])/46.2*4.5,  # s quad
-                       np.array([1, 0, -1, -1, 0, 1])/-92.4*4.5**2,  # s sext
-                       np.array([1, -2, 1, 1, -2, 1])/18.*4.5**2,  # n sext
+                       np.array([1, 0, -1, -1, 0, 1])/-92.4/2*4.5**2,  # s sext
+                       np.array([1, -2, 1, 1, -2, 1])/18./2*4.5**2,  # n sext
                        np.array([1, -2, 1, -1, 2, -1])/-138.6*4.5**3]  # NOT oct, no idea what this is
                      )
 
 THETA_FP_4 = np.array([np.array([1, 0, 1, 0])/2.,  # dipole
                        np.array([1, -1, 1, -1])/-6.*4.5,  # n quad
                        np.array([1, 1, -1, -1])/30.8*4.5,  # s quad
-                       np.array([1, -1, -1, 1])/46.2*4.5**2]  # sext
+                       np.array([1, -1, -1, 1])/-46.2/2*4.5**2]  # sext
                      )
 
-# four probe stations in the garage (Yoke , stations 37, 39, 41) have a different arrangement of probes
+# four probe stations in the garage (stations 37, 39, 41) have a different arrangement of probes
 # STATION 37, 39
 # TM, TO, BI, BM
 THETA_FP_4_ST37_ST39 = np.array([np.array([1, 0, 0, 1])/2.,  #dipole
-                              np.array([-1, 1, -1, 1])/6.*4.5,  # n quad
-                              np.array([1, 1, -1, -1])/30.8*4.5,  # s quad
-                              np.array([-1, 1, 1, -1])/46.2*4.5**2]  # sext?
-                            )
+                                 np.array([-1, 1, -1, 1])/6.*4.5,  # n quad
+                                 np.array([1, 1, -1, -1])/30.8*4.5,  # s quad
+                                 np.array([-1, 1, 1, -1])/46.2/2*4.5**2]  # sext?
+                               )
 # STATION 41
 # TO, TM, BI, BM
 THETA_FP_4_ST41 = np.array([np.array([0, 1, 0, 1])/2.,  #dipole
-                              np.array([1, -1, -1, 1])/6.*4.5,  # n quad
-                              np.array([1, 1, -1, -1])/30.8*4.5,  # s quad
-                              np.array([1, -1, 1, -1])/46.2*4.5**2]  # sext?
-                            )
+                            np.array([1, -1, -1, 1])/6.*4.5,  # n quad
+                            np.array([1, 1, -1, -1])/30.8*4.5,  # s quad
+                            np.array([1, -1, 1, -1])/46.2/2*4.5**2]  # sext?
+                          )
 
-__MULTIPOLE_ORDER = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8]
-__MULTIPOLE_SKEW = [0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+# No longer attempt to calculate either 18-pole.
+_MULTIPOLE_ORDER = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7, 7]
+_MULTIPOLE_SKEW = [0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1]
+_MULTS = np.array([__multipole(_MULTIPOLE_ORDER[i], _MULTIPOLE_SKEW[i], 1, trfp.TR_X, trfp.TR_Y) for i in range(14)])
+_MULTS[np.abs(_MULTS) < 1.0e-9] = 0 
 
-THETA_TR = np.linalg.pinv(np.transpose(np.array([__multipole(__MULTIPOLE_ORDER[i],
-                                                             __MULTIPOLE_SKEW[i],
-                                                             1, trfp.TR_X,
-                                                             trfp.TR_Y
-                                                            )
-                                                 for i in np.arange(17)])))
+THETA_TR = np.linalg.pinv(np.transpose(_MULTS))
+THETA_TR = np.insert(THETA_TR, 12, np.zeros(17), 0)
+THETA_TR = np.append(THETA_TR, np.zeros([2,17]), 0)
+THETA_TR[np.abs(THETA_TR) < 1.0e-9] = 0
 
-# the following are the Jacobians that take fixed probe to trolley
 
-def __jacobian_calc(probes, offset=False, weird_station=-1):
-    tr_x = trfp.TR_X
-    tr_y = trfp.TR_Y
-    if probes == 6:
-        THETA_FP = THETA_FP_6
-        if offset:
-            fp_x = trfp.FP6_X_OFFSET
-        else:
-            fp_x = trfp.FP6_X
-        fp_y = trfp.FP6_Y
-    else:
-        probes = 4
-        if weird_station == 41:
-            THETA_FP = THETA_FP_4_ST41
-            fp_x = trfp.FP4_X_ST41
-        elif (weird_station == 37) | (weird_station == 39):
-            THETA_FP = THETA_FP_4_ST37_ST39
-            fp_x = trfp.FP4_X_ST37_ST39
-        else:
-            THETA_FP = THETA_FP_4
-            fp_x = trfp.FP4_X
-        fp_y = trfp.FP4_Y
-        
-    As = np.arange(-10,10)
+# ## Jacobian matrices
+# New Jacobians calculated analytically (../jacobian_analytic_calc.ipynb).
+# 
+# Note that stations 37, 39, and 41 have the same Jacobian because their geometry is the same. They are both recorded here just to emphasize that.
 
-    dfp_dtr = np.zeros((probes, probes))
-    
-    for ii in np.arange(probes):
-        N = __MULTIPOLE_ORDER[ii]
-        s = __MULTIPOLE_SKEW[ii]
+# In[ ]:
 
-        tr_out = np.empty((len(As),probes))
-        tr_out[:] = np.nan
-        fp_out = np.empty((len(As),probes))
-        fp_out[:] = np.nan
 
-        for jj in np.arange(len(As)):
-            A = As[jj]
-            B_tr = __multipole(N, s, A, tr_x, tr_y)
-            B_fp = __multipole(N, s, A, fp_x, fp_y)
+J_6_PROBE = np.array([[1.0, 0.0, 0.0, 0.0, 2.631605],
+                      [0.0, 1.0, 0.0, 0.0, 0.0],
+                      [0.0, 0.0, 1.0, 0.0, 0.0],
+                      [0.0, 0.0, 0.0, 1.0, 0.0],
+                      [0.0, 0.0, 0.0, 0.0, 1.0]])
 
-            tr_out[jj,:] = np.matmul(THETA_TR, B_tr)[0:probes]
-            fp_out[jj,:] = np.matmul(THETA_FP, B_fp)
+J_6_PROBE_OFFSET = np.array([[1.0, 0.222222, 0.0, 0.0, 2.680987],
+                             [0.0, 1.0, 0.0, 0.0, 0.444444],
+                             [0.0, 0.0, 1.0, 0.444444, 0.0],
+                             [0.0, 0.0, 0.0, 1.0, 0.0],
+                             [0.0, 0.0, 0.0, 0.0, 1.0]])
 
-        for kk in np.arange(probes):
-            coeffs, covar = scipy.optimize.curve_fit(__lin_fit, As, fp_out[:,kk])
-            dfp_dtr[kk,ii] = coeffs[1]
-    return dfp_dtr
+J_4_PROBE = np.array([[1.0, 0.0, 0.0, 0.0, 2.927901],
+                      [0.0, 1.0, 0.0, 0.0, -0.666667],
+                      [0.0, 0.0, 1.0, -0.666667, 0.0],
+                      [0.0, 0.0, 0.0, 1.0, 0.0],
+                      [0.0, 0.0, 0.0, 0.0, 1.0]])
 
-# the following are dtr/dfp
+J_4_PROBE_ST41 = np.array([[1.0, 0.0, 0.0, 0.0, 2.927901],
+                           [0.0, 1.0, 0.0, 0.0, 0.0],
+                           [0.0, -0.194805, 1.0, 0.0, 0.0],
+                           [0.0, 0.0, 0.0, 1.0, -0.194805],
+                           [0.0, 0.0, 0.0, 0.0, 1.0]])
 
-J_6_PROBE = np.linalg.inv(__jacobian_calc(6, False)[0:5, 0:5])
-
-J_6_PROBE_OFFSET = np.linalg.inv(__jacobian_calc(6, True)[0:5, 0:5])
-
-J_4_PROBE = np.linalg.inv(__jacobian_calc(4, False))
-
-J_4_PROBE_ST37_ST39 = np.linalg.inv(__jacobian_calc(4, False, weird_station=37))
-# These last 2 should be equal, because the geometry is the same.
-J_4_PROBE_ST41 = np.linalg.inv(__jacobian_calc(4, False, weird_station=41))
-
+J_4_PROBE_ST37_ST39 = np.array([[1.0, 0.0, 0.0, 0.0, 2.927901],
+                                [0.0, 1.0, 0.0, 0.0, 0.0], 
+                                [0.0, -0.194805, 1.0, 0.0, 0.0], 
+                                [0.0, 0.0, 0.0, 1.0, -0.194805], 
+                                [0.0, 0.0, 0.0, 0.0, 1.0]])
 
