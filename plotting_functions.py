@@ -7,7 +7,7 @@ single_column_med = (6.202, 6.202)
 single_column_large = (6.202, 7.666)
 
 def plt_unix_time_to_CST(ax):
-    plt.locator_params(axis='x', nbins=5)
+    ax.locator_params(axis='x', nbins=5)
     xticks = ax.get_xticks()
     ax.set_xticklabels([pd.to_datetime(tm, unit='s').tz_localize('UTC').tz_convert('US/Central').strftime('%Y-%m-%d\n %H:%M:%S %Z')
                           for tm in xticks], rotation=30)
