@@ -10,7 +10,7 @@ def plt_unix_time_to_CST(ax):
     ax.locator_params(axis='x', nbins=5)
     xticks = ax.get_xticks()
     ax.set_xticklabels([pd.to_datetime(tm, unit='s').tz_localize('UTC').tz_convert('US/Central').strftime('%Y-%m-%d\n %H:%M:%S %Z')
-                          for tm in xticks], rotation=30)
+                          for tm in xticks], rotation=30, fontdict={'size':12, 'family':'serif'})
 
 def plt_set_labels(ax, x_label, y_label, title):
     ax.set_xlabel(x_label)
