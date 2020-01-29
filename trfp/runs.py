@@ -28,11 +28,11 @@ class Run(object):
     
     """Class for building DataFrames of Trolley runs."""
 
-    def __init__(self, run):
+    def __init__(self, run, prefix):
         self.run = run
 
         # determine whether the input run is a trolley run or fixed probe run
-        tr_run_temp = gm2.Trolley([run])
+        tr_run_temp = gm2.Trolley([run], prefix=prefix)
         if tr_run_temp.getEntries() != 0:
             self.trolley = True
             self.tr_run = tr_run_temp
