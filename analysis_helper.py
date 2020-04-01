@@ -71,8 +71,46 @@ def _choose_theta(st):
     else:
         raise Exception('Invalid number of station probes.')
     return theta_fp
-    
 
+def _drop_diff_single(input_array, threshold=200):
+    #copy input
+    start_array = input_array.copy()
+    #sanitize input array by replacing nan values with median values
+    start_array[np.isnan(start_array)] = np.nanmedian(start_array)
+    diff = np.diff(start_array)
+    drop_list = []
+    
+    for i in range(len(diff)-1):
+        if np.abs(diff[i]) > threshold:
+            drop_list.append(i+1)
+    
+    output_array = input_array.copy()
+    output_array[drop_list] = np.nan
+    
+    return output_array, len(drop_list)
+
+def _drop_freq_bin(input_array, bin_len = 1000, std = 3):
+    start_array = input_array.copy()
+    num_bin = start_array.size/bin_len
+
+    for i in range(num_bin):
+
+        center = np.nanmedian(start_array[i*bin_len:(i+1)*bin_len])
+        width = np.nanstd(start_array[i*bin_len:(i+1)*bin_len])
+
+        drop = np.abs(start_array[i*bin_len:(i+1)*bin_len] - center) > std*width
+        start_array[i*bin_len:(i+1)*bin_len][drop] = np.nan
+
+    center = np.nanmedian(start_array[num_bin*bin_len:])
+    width = np.nanstd(start_array[num_bin*bin_len:])
+
+    drop = np.abs(start_array[num_bin*bin_len:] - center) > std*width
+    start_array[num_bin*bin_len:][drop] = np.nan
+    
+    drops = np.sum(np.isnan(start_array)) - np.sum(np.isnan(input_array))
+    
+    return start_array, drops
+    
 
 # ## Root to interpolated data frame
 # `root_to_pandas`
@@ -80,7 +118,7 @@ def _choose_theta(st):
 # In[ ]:
 
 
-def root_to_pandas(run_range, prefix=None, tr_run=False):
+def root_to_pandas(run_range, prefix=None, tr_run=False, sanitize=False):
     
     if len(run_range) == 0: raise Exception('No runs specified.')
     if tr_run and len(run_range) > 1: raise Exception('Only one trolley run can be processed at a time.')
@@ -90,19 +128,18 @@ def root_to_pandas(run_range, prefix=None, tr_run=False):
     fp_run = gm2.FixedProbe(run_range, prefix=prefix)
     
     if tr_run:
-        tr_time, tr_phi, tr_freq = tr_run.getBasics()
         # drop first 5 events, which are 0, and last event, which can some times be 0
-        tr_time = tr_time[5:-1,:]/1.0e9  # convert nsec to sec
-        tr_phi = tr_phi[5:-1,:]
-        tr_freq = tr_freq[5:-1,:]
+        tr_time = tr_run.time[5:-1,:]/1.0e9  # convert nsec to sec
+        tr_phi = tr_run.azi[5:-1,:]
+        tr_freq = tr_run.freq[5:-1,:]
         for tr in range(17):
             tr_freq[:, tr] += trfp.PLUNGING_PROBE_CALIBRATIONS[tr]
 
-    fp_time, fp_freq, fp_qual = fp_run.getBasics()
+#     fp_time, fp_freq, fp_qual = fp_run.getBasics()
     # drop first event, which is always 0 from import
-    fp_time = fp_time[1:,:]/1.0e9  # convert nsec to sec
-    fp_freq = fp_freq[1:,:]
-    fp_qual = fp_qual[1:,:]
+    fp_time = fp_run.time[1:,:]/1.0e9  # convert nsec to sec
+    fp_freq = fp_run.freq[1:,:]
+    fp_qual = fp_run.qtag[1:,:]
 
     ################################################################################
     ### Apply fixed probe event DQC cuts ###########################################
@@ -114,11 +151,20 @@ def root_to_pandas(run_range, prefix=None, tr_run=False):
 
     fp_freq_dqc = fp_freq.copy()
     fp_freq_dqc[fp_qual > 0] = np.nan
-
+    
+    ################################################################################
+    ### Apply fixed probe event hell probe cuts ####################################
+    ### Interpolate over nan values ################################################
+    ################################################################################
+    
     for fp in range(378):
+        if sanitize:
+            fp_freq_dqc[:,fp], _ = _drop_diff_single(fp_freq_dqc[:,fp], threshold=200)
+            fp_freq_dqc[:,fp], _ = _drop_freq_bin(fp_freq_dqc[:,fp], bin_len = 1000, std = 3)
+        
         nans, index = _nan_helper(fp_freq_dqc[:,fp])
         fp_freq_dqc[:,fp][nans] = np.interp(index(nans), index(~nans), fp_freq_dqc[:,fp][~nans])
-
+    
     ################################################################################
     ################################################################################
     ################################################################################

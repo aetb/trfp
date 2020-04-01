@@ -74,7 +74,7 @@ THETA_FP_4_ST41 = np.array([np.array([0, 1, 0, 1])/2.,  #dipole
 
 # No longer attempt to calculate either 18-pole.
 _MULTIPOLE_ORDER = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7, 7]
-_MULTIPOLE_SKEW = [0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1]
+_MULTIPOLE_SKEW = [0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1]
 _MULTS = np.array([__multipole(_MULTIPOLE_ORDER[i], _MULTIPOLE_SKEW[i], 1, trfp.TR_X, trfp.TR_Y) for i in range(14)])
 _MULTS[np.abs(_MULTS) < 1.0e-9] = 0 
 
