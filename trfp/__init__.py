@@ -48,6 +48,7 @@ from trfp.matrices import THETA_FP_6
 from trfp.matrices import THETA_TR
 from trfp.matrices import J_6_PROBE
 from trfp.matrices import J_6_PROBE_OFFSET
+from trfp.matrices import J_ST_5
 from trfp.matrices import J_4_PROBE
 from trfp.matrices import J_4_PROBE_ST37_ST39
 from trfp.matrices import J_4_PROBE_ST41

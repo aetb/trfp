@@ -52,7 +52,9 @@ def _choose_J(st):
         elif (st == 37) | (st == 39): J = trfp.J_4_PROBE_ST37_ST39
         else: J = trfp.J_4_PROBE
     elif trfp.STATION_PROBE_NUMBER[st] == 6:
-        if st < 6: J = trfp.J_6_PROBE_OFFSET
+        if st < 6:
+            if st==5: J = trfp.J_ST_5
+            else: J = trfp.J_6_PROBE_OFFSET
         else: J = trfp.J_6_PROBE
     else:
         raise Exception('Invalid number of station probes.')
