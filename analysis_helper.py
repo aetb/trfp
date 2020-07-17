@@ -10,7 +10,8 @@ import numpy as np
 import pandas as pd
 from scipy.integrate import cumtrapz
 
-#import gm2
+
+import gm2
 import trfp
 import helper_function_candidates as helper
 

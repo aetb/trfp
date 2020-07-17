@@ -79,10 +79,15 @@ _MULTS = np.array([__multipole(_MULTIPOLE_ORDER[i], _MULTIPOLE_SKEW[i], 1, trfp.
 _MULTS[np.abs(_MULTS) < 1.0e-9] = 0 
 
 THETA_TR = np.linalg.pinv(np.transpose(_MULTS))
-THETA_TR = np.insert(THETA_TR, 12, np.zeros(17), 0)
-THETA_TR = np.append(THETA_TR, np.zeros([2,17]), 0)
+THETA_TR = np.insert(THETA_TR, 12, np.zeros(16), 0)
+THETA_TR = np.append(THETA_TR, np.zeros([2,16]), 0)
 THETA_TR[np.abs(THETA_TR) < 1.0e-9] = 0
+test = np.array([np.insert(THETA_TR[0], 8, 0)])
 
+for i in range(len(THETA_TR)-1):
+    row = np.array([np.insert(THETA_TR[i+1], 8, 0)])
+    test = np.concatenate((test, row), 0)
+THETA_TR = test
 
 # ## Jacobian matrices
 # New Jacobians calculated analytically (../jacobian_analytic_calc.ipynb).
