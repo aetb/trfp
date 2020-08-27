@@ -34,31 +34,31 @@ FP6_X = np.array([-3, 0, 3, -3, 0, 3])
 FP6_X_OFFSET = np.array([-4, -1, 2, -4, -1, 2])
 FP6_Y = np.array([7.7, 7.7, 7.7, -7.7, -7.7, -7.7])
  
-# TR_X = np.array([0]
-#                 + [1.75 * np.sin(2*np.pi/4*i)
-#                    for i in np.arange(4)]
-#                 + [3.5 * np.sin(2*np.pi/12*i)
-#                    for i in np.arange(12)])
-# TR_Y = np.array([0]
-#                 + [-1.75 * np.cos(2*np.pi/4*i)
-#                    for i in np.arange(4)]
-#                 + [-3.5 * np.cos(2*np.pi/12*i)
-#                    for i in np.arange(12)])
- 
 TR_X = np.array([0]
                 + [1.75 * np.sin(2*np.pi/4*i)
                    for i in np.arange(4)]
                 + [3.5 * np.sin(2*np.pi/12*i)
-                   for i in np.arange(3)]
-                + [3.5 * np.sin(2*np.pi/12*i)
-                   for i in np.arange(4,12)])
+                   for i in np.arange(12)])
 TR_Y = np.array([0]
                 + [-1.75 * np.cos(2*np.pi/4*i)
                    for i in np.arange(4)]
-               + [-3.5 * np.cos(2*np.pi/12*i)
-                  for i in np.arange(3)]
-               + [-3.5 * np.cos(2*np.pi/12*i)
-                  for i in np.arange(4,12)])
+                + [-3.5 * np.cos(2*np.pi/12*i)
+                   for i in np.arange(12)])
+ 
+# TR_X = np.array([0]
+#                 + [1.75 * np.sin(2*np.pi/4*i)
+#                    for i in np.arange(4)]
+#                 + [3.5 * np.sin(2*np.pi/12*i)
+#                    for i in np.arange(3)]
+#                 + [3.5 * np.sin(2*np.pi/12*i)
+#                    for i in np.arange(4,12)])
+# TR_Y = np.array([0]
+#                 + [-1.75 * np.cos(2*np.pi/4*i)
+#                    for i in np.arange(4)]
+#                + [-3.5 * np.cos(2*np.pi/12*i)
+#                   for i in np.arange(3)]
+#                + [-3.5 * np.cos(2*np.pi/12*i)
+#                   for i in np.arange(4,12)])
 
 
 # ## Station-probe information

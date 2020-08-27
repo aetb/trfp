@@ -75,30 +75,30 @@ THETA_FP_4_ST41 = np.array([np.array([0, 1, 0, 1])/2.,  #dipole
 # No longer attempt to calculate either 18-pole.
 # Jonathan may have changed this by accident (before 7/21/2020)
 
-#_MULTIPOLE_ORDER = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7, 7]
-#_MULTIPOLE_SKEW = [0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1]
-#_MULTS = np.array([__multipole(_MULTIPOLE_ORDER[i], _MULTIPOLE_SKEW[i], 1, trfp.TR_X, trfp.TR_Y) for i in range(14)])
-#_MULTS[np.abs(_MULTS) < 1.0e-9] = 0 
-#THETA_TR = np.linalg.pinv(np.transpose(_MULTS))
-#THETA_TR = np.insert(THETA_TR, 12, np.zeros(17), 0)
-#THETA_TR = np.append(THETA_TR, np.zeros([2,17]), 0)
-#THETA_TR[np.abs(THETA_TR) < 1.0e-9] = 0
-
-
 _MULTIPOLE_ORDER = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7, 7]
 _MULTIPOLE_SKEW = [0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1]
 _MULTS = np.array([__multipole(_MULTIPOLE_ORDER[i], _MULTIPOLE_SKEW[i], 1, trfp.TR_X, trfp.TR_Y) for i in range(14)])
 _MULTS[np.abs(_MULTS) < 1.0e-9] = 0 
 THETA_TR = np.linalg.pinv(np.transpose(_MULTS))
-THETA_TR = np.insert(THETA_TR, 12, np.zeros(16), 0)
-THETA_TR = np.append(THETA_TR, np.zeros([2,16]), 0)
+THETA_TR = np.insert(THETA_TR, 12, np.zeros(17), 0)
+THETA_TR = np.append(THETA_TR, np.zeros([2,17]), 0)
 THETA_TR[np.abs(THETA_TR) < 1.0e-9] = 0
-theta = np.array([np.insert(THETA_TR[0], 8, 0)])
 
-for i in range(len(THETA_TR)-1):
-    row = np.array([np.insert(THETA_TR[i+1], 8, 0)]) #0 is added to the element indexed at8, 9th probe
-    theta = np.concatenate((theta, row), 0)
-THETA_TR = theta
+
+#_MULTIPOLE_ORDER = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7, 7]
+#_MULTIPOLE_SKEW = [0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1]
+#_MULTS = np.array([__multipole(_MULTIPOLE_ORDER[i], _MULTIPOLE_SKEW[i], 1, trfp.TR_X, trfp.TR_Y) for i in range(14)])
+#_MULTS[np.abs(_MULTS) < 1.0e-9] = 0 
+#THETA_TR = np.linalg.pinv(np.transpose(_MULTS))
+#THETA_TR = np.insert(THETA_TR, 12, np.zeros(16), 0)
+#THETA_TR = np.append(THETA_TR, np.zeros([2,16]), 0)
+#THETA_TR[np.abs(THETA_TR) < 1.0e-9] = 0
+#theta = np.array([np.insert(THETA_TR[0], 8, 0)])
+
+#for i in range(len(THETA_TR)-1):
+#    row = np.array([np.insert(THETA_TR[i+1], 8, 0)]) #0 is added to the element indexed at8, 9th probe
+#    theta = np.concatenate((theta, row), 0)
+#THETA_TR = theta
 
 # ## Jacobian matrices
 # New Jacobians calculated analytically (../jacobian_analytic_calc.ipynb).
@@ -107,30 +107,30 @@ THETA_TR = theta
 
 # In[ ]:
 
-#Uncomment if not working with st 5
-# J_6_PROBE = np.array([[1.0, 0.0, 0.0, 0.0, 2.631605],
-#                       [0.0, 1.0, 0.0, 0.0, 0.0],
-#                       [0.0, 0.0, 1.0, 0.0, 0.0],
-#                       [0.0, 0.0, 0.0, 1.0, 0.0],
-#                       [0.0, 0.0, 0.0, 0.0, 1.0]])
 
-# J_6_PROBE_OFFSET = np.array([[1.0, 0.222222, 0.0, 0.0, 2.680987],
-#                              [0.0, 1.0, 0.0, 0.0, 0.444444],
-#                              [0.0, 0.0, 1.0, 0.444444, 0.0],
-#                              [0.0, 0.0, 0.0, 1.0, 0.0],
-#                              [0.0, 0.0, 0.0, 0.0, 1.0]])
-
-J_6_PROBE = np.array([[1.0, 0.0, 0.0, 0.0, 0.0],
+J_6_PROBE = np.array([[1.0, 0.0, 0.0, 0.0, 2.631605],
                       [0.0, 1.0, 0.0, 0.0, 0.0],
                       [0.0, 0.0, 1.0, 0.0, 0.0],
                       [0.0, 0.0, 0.0, 1.0, 0.0],
                       [0.0, 0.0, 0.0, 0.0, 1.0]])
 
-J_6_PROBE_OFFSET = np.array([[1.0, 0.0, 0.0, 0.0, 0.0],
-                             [0.0, 1.0, 0.0, 0.0, 0.0],
-                             [0.0, 0.0, 1.0, 0.0, 0.0],
+J_6_PROBE_OFFSET = np.array([[1.0, 0.222222, 0.0, 0.0, 2.680987],
+                             [0.0, 1.0, 0.0, 0.0, 0.444444],
+                             [0.0, 0.0, 1.0, 0.444444, 0.0],
                              [0.0, 0.0, 0.0, 1.0, 0.0],
                              [0.0, 0.0, 0.0, 0.0, 1.0]])
+#Uncomment if working with Station 5
+# J_6_PROBE = np.array([[1.0, 0.0, 0.0, 0.0, 0.0],
+#                       [0.0, 1.0, 0.0, 0.0, 0.0],
+#                       [0.0, 0.0, 1.0, 0.0, 0.0],
+#                       [0.0, 0.0, 0.0, 1.0, 0.0],
+#                       [0.0, 0.0, 0.0, 0.0, 1.0]])
+
+# J_6_PROBE_OFFSET = np.array([[1.0, 0.0, 0.0, 0.0, 0.0],
+#                              [0.0, 1.0, 0.0, 0.0, 0.0],
+#                              [0.0, 0.0, 1.0, 0.0, 0.0],
+#                              [0.0, 0.0, 0.0, 1.0, 0.0],
+#                              [0.0, 0.0, 0.0, 0.0, 1.0]])
 
 J_4_PROBE = np.array([[1.0, 0.0, 0.0, 0.0, 2.927901],
                       [0.0, 1.0, 0.0, 0.0, -0.666667],
