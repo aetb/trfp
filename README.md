@@ -32,3 +32,6 @@ Current as of 24 Sept 2019.
 
 6. The resulting vtm dataframe can be averaged in any way desired. Simple time-binning and naive azimuthal averaging are demonstrated in `9day_analysis.ipynb`.
 
+## Sept 2020 Updates
+
+Run 1 final cleanup occurred at the beginning of September 2020 (currently ongoing). The goal is to clean up old files, sort them, and collapse them into relatively few active analysis scripts. These can then be ported into `gm2fieldpy` and `trfp` can be committed and saved for posterity, but leave active development.
