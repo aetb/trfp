@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# # Analysis Helper
-
-# In[ ]:
-
-
 import numpy as np
 import pandas as pd
 from scipy.integrate import cumtrapz
@@ -331,12 +323,14 @@ def calc_moment_df(interp_df):
         theta_fp = _choose_theta(station)
 
         # step through m values
+        # note that this no longer calculates m6 for 6 probe stations
+        ### CLEAN THIS PART UP
         for m in np.arange(len(trfp.STATION_PROBE_ID[station])):
-            stm = 'st'+str(station)+',m'+str(m+1)
-            moment_df[stm] = interp_df[fp_st].dot(theta_fp[m])
+            if not m == 5:
+                stm = 'st'+str(station)+',m'+str(m+1)
+                moment_df[stm] = interp_df[fp_st].dot(theta_fp[m])
         if len(trfp.STATION_PROBE_ID[station]) == 4:
             moment_df['st'+str(station)+',m5'] = np.nan
-            moment_df['st'+str(station)+',m6'] = np.nan
 
     # Interpolate the 6-probe m5 and m6 into the 4-probe m5 and m6        
     for st in range(72):
@@ -345,7 +339,8 @@ def calc_moment_df(interp_df):
             w1 = trfp.STATION_BARCODE_PHI[(st+1)%72] - trfp.STATION_BARCODE_PHI[st]
             w2 = trfp.STATION_BARCODE_PHI[st] - trfp.STATION_BARCODE_PHI[(st-1)%72]
 
-            for m in [5, 6]:
+            # again, no m6 in fixed probes
+            for m in [5]:
                 stm = 'st'+str(st)+',m'+str(m)
                 if not np.isnan(moment_df[stm].iloc[0]):
                     print stm + ' is not nan.'
@@ -359,18 +354,6 @@ def calc_moment_df(interp_df):
     
     return moment_df
 
-
-# # Virtual trolley measurement calculation
-
-# `vtm_calc`
-# 
-# $m_{vtr}(t) = m_{tr}(0) + J\left[m_{fp}(t) - m_{fp}(0)\right]$
-# 
-# $m_{vtr}(t) = J m_{fp}(t) + \left[m_{tr}(0) - J m_{fp}(0)\right]$
-
-# In[ ]:
-
-
 # generate virutal trolley measurements
 
 def vtm_calc(fp_moment_df,
@@ -382,6 +365,7 @@ def vtm_calc(fp_moment_df,
     
     # apply Jacobian to each station's m_fp
     
+    # this is for moments 1 through 5 (fp trackable moments)
     for st in range(72):
         
         # choose Jacobian
@@ -399,9 +383,19 @@ def vtm_calc(fp_moment_df,
         sync_correction = np.empty((len(vtm_df.index.values),5))
         for m in range(5):
             sync_correction[:,m] = np.interp(vtm_df.index.values,
-                                             [baseline_time_1[st,m], baseline_time_2[st,m]],
+                                             [baseline_time_1[st], baseline_time_2[st]],
                                              [sync_correction_1[m], sync_correction_2[m]])
         vtm_df[stms] += sync_correction
+    
+    # linear interpolation of the trolley baselines for fp-untrackable moments
+    for st in range(72):
+        for m in range(5,9):
+            stm = 'st'+str(st)+',m'+str(m+1)
+            high_m_interp = np.interp(vtm_df.index.values, [baseline_time_1[st], baseline_time_2[st]],
+                                      [tr_baseline_1[st, m], tr_baseline_2[st, m]])
+            vtm_df[stm] = high_m_interp
+    
+    vtm_df = vtm_df.reindex(sorted(vtm_df.columns), axis=1)
         
     return vtm_df
 
