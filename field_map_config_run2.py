@@ -1,6 +1,6 @@
 ## paths and dictionaries
 
-prefix = '/data1/newg2/DataProduction/Offline/ArtTFSDir/v9_52_00_dev2/FieldPlainRootOutput_'
+prefix = 'data1/newg2/DataProduction/Offline/ArtTFSDir/v9_52_00_dev2/FieldPlainRootOutput_'
 
 runs = ['2a', '2b', '2c', '2d', '2e', '2f', '2g', '2h', '2i']
 nonprod_runs = ['2a', '2b']
@@ -9,11 +9,11 @@ root_dict = {'2a':{'fp_df_1':range(6630, 6672+1),
                    'tr_df_1':[6627], 'tr_df_2':[6676],
                    'subrun_df':[24433, 24474]},
              '2b':{'fp_df_1':range(6780, 6837+1), 'fp_df_2':range(6845, 6877+1),
-                   'tr_df_1':[6777], 'tr_df_2':[6853], 'tr_df_3':[6880],
+                   'tr_df_1':[6777], 'tr_df_2':[6843], 'tr_df_3':[6880],
                    'subrun_df':[24499, 24648]},
              '2c':{'fp_df_1':range(6883, 6934+1), 'fp_df_2':range(6946, 6985+1),
                    'fp_df_3':range(6992, 7029+1), 'fp_df_4':range(7036, 7065+1),
-                   'tr_df_1':[6880], 'tr_df_2':[6937], 'tr_df_3':[6988, 6989],
+                   'tr_df_1':[6880], 'tr_df_2':[6937], 'tr_df_3a':[6988], 'tr_df_3b':[6989],
                    'tr_df_4':[7032], 'tr_df_5':[7070],
                    'subrun_df':[24683, 25045]},
              '2d':{'fp_df_1':range(7082, 7104), 'fp_df_2':range(7124, 7149),
@@ -21,7 +21,7 @@ root_dict = {'2a':{'fp_df_1':range(6630, 6672+1),
                    'fp_df_5':range(7218, 7248), 'fp_df_6':range(7256, 7290),
                    'tr_df_1':[7078], 'tr_df_2':[7107],
                    'tr_df_3':[7152], 'tr_df_4':[7188],
-                   'tr_df_5':[7215], 'tr_df_6':[7251, 7253].
+                   'tr_df_5':[7215], 'tr_df_6a':[7251], 'tr_df_6b':[7253],
                    'tr_df_7':[7293],
                    'subrun_df':[25894, 26384]},
              '2e':{'fp_df_1':range(7396, 7427+1), 'fp_df_2':range(7435, 7465+1),
@@ -30,7 +30,7 @@ root_dict = {'2a':{'fp_df_1':range(6630, 6672+1),
              '2f':{'fp_df_1':range(7480, 7511+1), 'fp_df_2':range(7521, 7546+1),
                    'tr_df_1':[7477], 'tr_df_2':[7514], 'tr_df_3':[7549],
                    'subrun_df':[26675, 26804]},
-             '2g':{'fp_df_1':range(7611, 7635+1), 'fp_df_2':range(7650, 7660+1),
+             '2g':{'fp_df_1':range(7611, 7635+1),  # 'fp_df_2':range(7650, 7660+1),
                    'tr_df_1':[7608], 'tr_df_2':[7638],
                    'subrun_df':[26996, 27043]},
              '2h':{'fp_df_1':range(7678, 7696+1),
@@ -57,8 +57,11 @@ pair_dict = {'2a':{'fp_df_1':['tr_df_1', 'tr_df_2']},
              '2h':{'fp_df_1':['tr_df_1', 'tr_df_2']},             
              '2i':{'fp_df_1':['tr_df_1', 'tr_df_2']}}
 
-interp_file_dict = {'2a':'hdf5/date_run_2a.h5', '2b':'hdf5/date_run_2b.h5',
-                    '2c':'hdf5/date_run_2c.h5', '2d':'hdf5/date_run_2d.h5',
-                    '2e':'hdf5/date_run_2a.h5', '2f':'hdf5/date_run_2b.h5',
-                    '2g':'hdf5/date_run_2c.h5', '2h':'hdf5/date_run_2d.h5',
-                    '2i':'hdf5/date_run_2a.h5'}
+subruns = ['2a1', '2b1', '2b2', '2c1', '2c2', '2c3', '2c4', '2d1', '2d2', '2d3', '2d4', '2d5', '2d6',
+           '2e1', '2e2', '2f1', '2f2', '2g1', '2g2', '2h1', '2i1']
+
+interp_file_dict = {'2a':'hdf5/2021-01-11_run_2a.h5', '2b':'hdf5/2021-01-11_run_2b.h5',
+                    '2c':'hdf5/2021-01-11_run_2c.h5', '2d':'hdf5/2021-01-11_run_2d.h5',
+                    '2e':'hdf5/2021-01-11_run_2a.h5', '2f':'hdf5/2021-01-11_run_2b.h5',
+                    '2g':'hdf5/2021-01-11_run_2c.h5', '2h':'hdf5/2021-01-11_run_2d.h5',
+                    '2i':'hdf5/2021-01-11_run_2a.h5'}

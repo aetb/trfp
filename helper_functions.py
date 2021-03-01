@@ -139,8 +139,11 @@ def root_to_pandas(run_range, prefix=None, tr_run=False, sanitize=False):
         ### Interpolate trolley position ###############################################
         ################################################################################
 
-        phi_time = np.mean(tr_time, axis=1)
-        phi_phi = np.mean(tr_phi, axis=1)
+        phi_time = np.median(tr_time, axis=1)
+        phi_phi = np.median(tr_phi, axis=1)
+        
+        pivot = np.argmax(np.abs(np.diff(phi_phi)))
+        phi_phi[pivot+1:] -= 360
         
         all_times = np.append(edge_times,phi_time)
         sort_index = np.argsort(all_times)
@@ -154,6 +157,8 @@ def root_to_pandas(run_range, prefix=None, tr_run=False, sanitize=False):
         
         integrated_phi = cumtrapz(sort_phi, x=sort_times, initial=0)
         grid_phi[:,0] = np.diff(integrated_phi[edge_index])
+        
+        grid_phi[grid_phi < 0] += 360
 
         ################################################################################
         ################################################################################
