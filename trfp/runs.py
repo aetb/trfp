@@ -12,7 +12,7 @@ import pandas as pd
 from scipy.interpolate import interp1d
 from scipy.integrate import cumtrapz
 
-import gm2
+#import gm2
 import trfp
 
 
