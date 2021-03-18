@@ -321,7 +321,7 @@ def trolley_run_station_average(corrected_df):
 
 def _apply_blinds_fp(input_df, blinds):
     output_df = input_df.copy()
-    for m in range(6):
+    for m in range(5):
         stms = ['st'+str(st)+',m'+str(m+1) for st in range(72)]
         output_df[stms] = output_df[stms] + blinds[m]
     return output_df
@@ -329,8 +329,9 @@ def _apply_blinds_fp(input_df, blinds):
 def _apply_blinds_tr(input_df, blinds):
     output_df = input_df.copy()
     for m in range(6):
-        stms = ['st'+str(st)+',m'+str(m+1) for st in range(72)]
-        output_df[stms] = output_df[stms] + blinds[m]
+        if m < 5:
+            stms = ['st'+str(st)+',m'+str(m+1) for st in range(72)]
+            output_df[stms] = output_df[stms] + blinds[m]
         trms = ['tr,m'+str(m+1)]
         output_df[trms] = output_df[trms] + blinds[m]
     return output_df
