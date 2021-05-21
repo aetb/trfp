@@ -52,17 +52,26 @@ def DropPos(geom):
     return reducedGeometry, badProbes
 
 def Theta(geom, badProbes, mult_order, mult_skew):    
+    #"If then" for truncating moments, can recover all moments from dropping 1 trfp 
     if not geom.IsReduced():
         print("The geometry given has non-working probes")
         return
     lenOrigProbes = len(geom.probes) + len(badProbes)
-    _MULTS_FP_N = np.array([__multipole(mult_order[i], mult_skew[i], 1, geom.xpos, geom.ypos)\
-                            for i in range(len(mult_order) - len(badProbes))])
+    if len(badProbes) + len(mult_order) > lenOrigProbes:
+        _MULTS_FP_N = np.array([__multipole(mult_order[i], mult_skew[i], 1, geom.xpos, geom.ypos)\
+                                for i in range(len(mult_order) - len(badProbes))])
+    else:
+        _MULTS_FP_N = np.array([__multipole(mult_order[i], mult_skew[i], 1, geom.xpos, geom.ypos)\
+                                for i in range(len(mult_order))])
+        
     _MULTS_FP_N[np.abs(_MULTS_FP_N) < 1.0e-9] = 0
     
     INV_MULT = np.linalg.pinv(np.transpose(_MULTS_FP_N))
     INV_MULT[np.abs(INV_MULT) < 1.0e-9] = 0
     
+    I = np.dot(INV_MULT,np.transpose(_MULTS_FP_N))
+    I[np.abs(I) < 1.0e-9] =0
+    #print(I)
     #Add the columns of 0
     inv_mult = np.zeros((len(INV_MULT), lenOrigProbes))
     j = 0
@@ -88,9 +97,20 @@ def ProbeDrops(geom):
     
     _MULTIPOLE_ORDER = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7, 7]
     _MULTIPOLE_SKEW = [0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1]
-    if len(geom.probes) < len(_MULTIPOLE_ORDER):
-        _MULTIPOLE_ORDER = _MULTIPOLE_ORDER[:len(geom.probes)]
+    #Check if station or Trolley
+    Trolley = False
+    if (len(geom.probes)) > 6:
+        Trolley = True
+    
+    if Trolley:
         _MULTIPOLE_SKEW = _MULTIPOLE_SKEW[:len(geom.probes)]
+        _MULTIPOLE_ORDER = _MULTIPOLE_ORDER[:len(geom.probes)]
+    elif len(badProbes) > 1:
+        _MULTIPOLE_SKEW = _MULTIPOLE_SKEW[:len(geom.probes)]
+        _MULTIPOLE_ORDER = _MULTIPOLE_ORDER[:len(geom.probes)]
+    else:
+        _MULTIPOLE_SKEW = _MULTIPOLE_SKEW[:5] #Up to m5
+        _MULTIPOLE_ORDER = _MULTIPOLE_ORDER[:5] #Up to m5
 
     return Theta(reducedGeometry, badProbes, _MULTIPOLE_ORDER, _MULTIPOLE_SKEW)
 # # Convert Tier-1 ROOT files to Pandas data frames
@@ -385,7 +405,14 @@ def root_to_pandas(run_range, prefix=None, tr_run=False, sanitize=False):
 # In[ ]:
 
 
-def calc_moment_df(interp_df, trolleyProbes = np.zeros(17)+1):
+def calc_moment_df(interp_df, trolleyProbes = np.zeros(17)+1,\
+                   fixedProbes = np.zeros((76,6))+1):
+    #Make regular regular 4 and 6 FP thetas -JS
+    FP6Geometry = Geometry(trfp.FP6_X, trfp.FP6_Y, np.zeros(6)+1)
+    FP6Theta = ProbeDrops(FP6Geometry)
+        
+    FP4Geometry = Geometry(trfp.FP4_X, trfp.FP4_Y, np.zeros(4)+1)
+    FP4Theta = ProbeDrops(FP4Geometry)
     
     tr_run = 'tr_phi' in interp_df.columns
     
@@ -393,13 +420,14 @@ def calc_moment_df(interp_df, trolleyProbes = np.zeros(17)+1):
     
     # calculate trolley moments if needed
     if tr_run:
+        #Trolley Probe Dropping -JS
         TrolleyGeometry = Geometry(trfp.TR_X, trfp.TR_Y, trolleyProbes)
         TrolleyTheta = ProbeDrops(TrolleyGeometry)
         TrolleyTheta = np.insert(TrolleyTheta, 12, np.zeros(17), axis = 0)
         TrolleyTheta = np.concatenate((TrolleyTheta, np.zeros((2,17))))
         
         moment_df['tr_phi'] = interp_df['tr_phi'].copy()
-        print 'Calculating trolley moments.',
+        print 'Calculating trolley moments.'
         theta_tr = TrolleyTheta
         for m in np.arange(17):
             tr_probes = ['tr'+str(probe) for probe in np.arange(17)]
@@ -409,9 +437,38 @@ def calc_moment_df(interp_df, trolleyProbes = np.zeros(17)+1):
     for station in np.arange(72):
         print '\rCalculating station ' + str(station) + ' moments.',
         fp_st = ['fp'+str(fp) for fp in trfp.STATION_PROBE_ID[station]]
+        
+        # Check number of probes in station and rearrange geometries -JS
+        if len(trfp.STATION_PROBE_ID[station]) == 6:
+            if not( 0 in fixedProbes[station]):
+                theta_fp = FP6Theta
+                #theta_fp = trfp.THETA_FP_6
+            else: 
+                StGeom = Geometry(trfp.FP6_X, trfp.FP6_Y, fixedProbes[station])
+                StTheta = ProbeDrops(StGeom)
+                theta_fp = StTheta
+        
+        elif(station == 41):
+            St41Geom = Geometry(trfp.FP4_X_ST41, trfp.FP4_Y, fixedProbes[station][:4])
+            St41Theta = ProbeDrops(St41Geom)
+            theta_fp = St41Theta
+        
+        elif (station == 37) or (station == 39):
+            St37_39Geom = Geometry(trfp.FP4_X_ST37_ST39, trfp.FP4_Y,\
+                                   fixedProbes[station][:4])
+            St37_39Theta = ProbeDrops(St37_39Geom)
+            theta_fp = St37_39Theta
+            
+        else:
+            if not (0 in fixedProbes[station][:4]):
+                theta_fp = FP4Theta
+            else:
+                StGeom = Geometry(trfp.FP4_X, trfp.FP4_Y, fixedProbes[station][:4])
+                StTheta = ProbeDrops(StGeom)
+                theta_fp = StTheta
 
-        # choose proper theta matrix
-        theta_fp = _choose_theta(station)
+        # # choose proper theta matrix     #Not needed when probe dropping -JS
+        # theta_fp = _choose_theta(station)#
 
         # step through m values
         # note that this no longer calculates m6 for 6 probe stations
