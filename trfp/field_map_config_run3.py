@@ -1,0 +1,98 @@
+## paths and dictionaries
+
+path = '/data2/newg2/DataProduction/Offline/ArtTFSDir/v9_57_00/FieldPlainRootOutput_'
+
+## Note: 3a and 3h don't have field data
+runs = ['3b', '3c', '3d', '3e', '3f', '3g', '3i', '3j', '3k', '3l', '3m', '3n', '3o']
+prod_runs = []
+subruns = ['3b1', '3b3', '3b3', '3c1', '3d1', '3d2', '3d3', '3d4', '3d5', '3d6',
+           '3e1', '3e2', '3e3', '3f1', '3g1', '3g2', '3i1', '3i2', '3j1', '3j2',
+           '3j3', '3k1', '3l1', '3m1', '3m2', '3m3', '3n1', '3n2', '3n3', '3n4',
+           '3n5', '3o1', '3o2', '3o3']
+
+## Note: 3d6 and 3e1 are the same
+root_dict = {'3b':{'fp_df_1':range(8715, 8744+1), 'fp_df_2':range(8750, 8793+1),
+                   'fp_df_3':range(8799, 8826+1),
+                   'tr_df_1':[8711], 'tr_df_2':[8747],
+                   'tr_df_3':[8796], 'tr_df_4':[8846],
+                   'subrun_df':[30252, 30506]},
+             '3c':{'fp_df_1':range(8911, 8945+1),
+                   'tr_df_1':[8908], 'tr_df_2':[8948],
+                   'subrun_df':[30949, 31063]},
+             '3d':{'fp_df_1':range(8959, 8993+1), 'fp_df_2':range(8999, 9027+1),
+                   'fp_df_3':range(9033, 9067+1), 'fp_df_4':range(9073, 9088+1),
+                   'fp_df_5':range(9166, 9197+1), 'fp_df_6':range(9203, 9232+1),
+                   'tr_df_1':[8955], 'tr_df_2':[8996],
+                   'tr_df_3':[9030], 'tr_df_4':[9070],
+                   'tr_df_5':[9091], 'tr_df_6':[9163],
+                   'tr_df_7':[9200], 'tr_df_8':[9235],
+                   'subrun_df':[31368, 32035]},
+             '3e':{'fp_df_1':range(9203, 9232+1), 'fp_df_2':range(9238, 9249+1),
+                   'fp_df_3':range(9274, 9311+1),
+                   'tr_df_1':[9200], 'tr_df_2':[9235],
+                   'tr_df_3':[9271],  # note that there is no run 9271?
+                   'tr_df_4':[9314],
+                   'subrun_df':[32126, 32319]},
+             '3f':{'fp_df_1':range(9324, 9356+1),
+                   'tr_df_1':[9321], 'tr_df_2':[9359],
+                   'subrun_df':[32404, 32465]},
+             '3g':{'fp_df_1':range(9372, 9404+1), 'fp_df_2':range(9410, 9450+1),
+                   'tr_df_1':[9368], 'tr_df_2':[9407], 'tr_df_3':[9453],
+                   'subrun_df':[32608, 32776]},
+             '3i':{'fp_df_1':range(9542, 9586+1), 'fp_df_2':range(9592, 9612+1),
+                   'tr_df_1':[9539], 'tr_df_2':[9589], 'tr_df_3':[9616],
+                   'subrun_df':[33119, 33275]},
+             '3j':{'fp_df_1':range(9634, 9653+1), 'fp_df_2':range(9659, 9677+1),
+                   'fp_df_3':range(9683, 9699+1),
+                   'tr_df_1':[9631], 'tr_df_2':[9656],
+                   'tr_df_3':[9680], 'tr_df_4':[9702],
+                   'subrun_df':[33320, 33521]},
+             '3k':{'fp_df_1':range(9712, 9759+1),
+                   'tr_df_1':[9709],
+                   'subrun_df':[33580, 33663]},
+             '3l':{'fp_df_1':range(9772, 9797+1),
+                   'tr_df_1':[9769], 'tr_df_2':[9800],
+                   'subrun_df':[33704, 33743]},
+             '3m':{'fp_df_1':range(9814, 9843+1), 'fp_df_2':range(9850, 9883+1),
+                   'fp_df_3':range(9889, 9925+1),
+                   'tr_df_1':[9811], 'tr_df_2':[9847],
+                   'tr_df_3':[9886], 'tr_df_4':[9928],
+                   'subrun_df':[33841, 34139]},
+             '3n':{'fp_df_1':range(9931, 9960+1), 'fp_df_2':range(9966, 10001+1),
+                   'fp_df_3':range(10008, 10033+1), 'fp_df_4':range(10039, 10069+1),
+                   'fp_df_5':range(10075, 10093+1),
+                   'tr_df_1':[9928], 'tr_df_2':[9963],
+                   'tr_df_3':[10005], 'tr_df_4':[10036],
+                   'tr_df_5':[10072], 'tr_df_6':[10096],
+                   'subrun_df':[34184, 34619]},
+             '3o':{'fp_df_1':range(10110, 10144+1), 'fp_df_2':range(10153, 10188+1),
+                   'fp_df_3':range(10194, 10222+1),
+                   'tr_df_1':[10106], 'tr_df_2':[10148],
+                   'tr_df_3':[10191], 'tr_df_4':[10225],
+                   'subrun_df':[34702, 34922]}
+            }
+
+## Note: 3k1 is not bookended
+pair_dict = {'3b':{'fp_df_1':['tr_df_1', 'tr_df_2'], 'fp_df_2':['tr_df_2', 'tr_df_3'],
+                   'fp_df_3':['tr_df_3', 'tr_df_4']},             
+             '3c':{'fp_df_1':['tr_df_1', 'tr_df_2']},             
+             '3d':{'fp_df_1':['tr_df_1', 'tr_df_2'], 'fp_df_2':['tr_df_2', 'tr_df_3'],
+                   'fp_df_3':['tr_df_3', 'tr_df_4'], 'fp_df_4':['tr_df_4', 'tr_df_5'],
+                   'fp_df_5':['tr_df_6', 'tr_df_7'], 'fp_df_6':['tr_df_7', 'tr_df_8']},             
+             '3e':{'fp_df_1':['tr_df_1', 'tr_df_2'], 'fp_df_2':['tr_df_2', 'book_3e2'],
+                   'fp_df_3':['book_3e3', 'tr_df_4']},             
+             '3f':{'fp_df_1':['tr_df_1', 'tr_df_2']},             
+             '3g':{'fp_df_1':['tr_df_1', 'tr_df_2'], 'fp_df_2':['tr_df_2', 'tr_df_3']},            
+             '3i':{'fp_df_1':['tr_df_1', 'tr_df_2'], 'fp_df_2':['tr_df_2', 'tr_df_3']},
+             '3j':{'fp_df_1':['tr_df_1', 'tr_df_2'], 'fp_df_2':['tr_df_2', 'tr_df_3'],
+                   'fp_df_3':['tr_df_3', 'tr_df_4']},
+             '3k':{'fp_df_1':['tr_df_1', 'book_3k1']},  # unbookended
+             '3l':{'fp_df_1':['tr_df_1', 'tr_df_2']},
+             '3m':{'fp_df_1':['tr_df_1', 'tr_df_2'], 'fp_df_2':['tr_df_2', 'tr_df_3'],
+                   'fp_df_3':['tr_df_3', 'tr_df_4']},
+             '3n':{'fp_df_1':['tr_df_1', 'tr_df_2'], 'fp_df_2':['tr_df_2', 'tr_df_3'],
+                   'fp_df_3':['tr_df_3', 'tr_df_4'], 'fp_df_4':['tr_df_4', 'tr_df_5'],
+                   'fp_df_5':['tr_df_5', 'tr_df_6']},
+             '3o':{'fp_df_1':['tr_df_1', 'tr_df_2'], 'fp_df_2':['tr_df_2', 'tr_df_3'],
+                   'fp_df_3':['tr_df_3', 'tr_df_4']}
+            }

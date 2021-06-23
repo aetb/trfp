@@ -31,7 +31,7 @@ FP4_X_ST37_ST39 = np.array([0, 3, -3, 0])
 FP4_Y = np.array([7.7, 7.7, -7.7, -7.7])
 
 FP6_X = np.array([-3, 0, 3, -3, 0, 3])
-FP6_X_OFFSET = np.array([-4, -1, 2, -4, -1, 2])
+FP6_X_OFFSET = np.array([-4, -1, 2, -4, -1, 2])  # stations 0--5
 FP6_Y = np.array([7.7, 7.7, 7.7, -7.7, -7.7, -7.7])
  
 TR_X = np.array([0]
