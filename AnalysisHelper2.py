@@ -1,3 +1,4 @@
+#This does fp and tp dropping, Multipole, LegendreAnalysis helper does this with Legendre
 import numpy as np
 import pandas as pd
 from scipy.integrate import cumtrapz

@@ -1,3 +1,4 @@
+#This does only trolley probe dropping, Analysis Helper2 does fixed probe dropping
 import numpy as np
 import pandas as pd
 from scipy.integrate import cumtrapz
