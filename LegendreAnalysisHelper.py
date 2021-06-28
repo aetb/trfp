@@ -143,6 +143,222 @@ def ProbeDropsL(geom, tpMomentCap = 14, fpMomentCap = 5, cylindrical = True):
     
     return ThetaL(legendre_moment, reducedGeometry, badProbes, tpMomentCap, fpMomentCap, cylindrical=cylindrical)
 
+#############################################################
+###############Start of 3D Legendre stuff####################
+#############################################################
+
+#Make a class similar to the Geometry file, made for dropping probes/ drop with 2 options:geometrical or number
+def legendre_moment3d(LNS, x, y, phi, cyl = True):
+    """ Computes 3D Legendre Moments.
+    
+    Takes regular Legendre Moment as developed by Alec Tewsley-Booth and 
+    adds a cos(n \phi) or sin(n\phi term). L corresponds to the Legendre
+    Moment order (L0,...,Lm), N corresponds to the azimuthal order or
+    periodicity (0 ,..., n). Cosine is "normal" while sine is "skew". Note
+    that are is no zeroth order skew Legendre Moments since Sin(0) = 0.
+    
+    Args:
+    LNS: a (3, X) numpy array containing the moments to be calculated;
+         X is any length > 1 this array is usually provided by the
+         FlattenMoment function.
+    
+    x:   a 1-d array containing the x-positions of the P points where the
+         Legendre Moments are to be calculated.
+         
+    y:   a 1-d array containing the y-positions of the P points where the
+         Legendre Moments are to be calculated.
+         
+    phi: a 1-d array containing the phi-positions (in radians) of the P
+         points where the Legendre Moments are to be calculated.
+         
+    cyl: argument that if True calculates cylindrical Legendre Moments. If
+         False, calculates cartesian Legendre Moments.
+    
+    """
+    s = LNS[2]
+    if s == 1:
+        return legendre_moment(LNS[0],x,y,cyl)*np.sin(LNS[1]*phi)
+    elif s == 0:
+        return legendre_moment(LNS[0],x,y,cyl)*np.cos(LNS[1]*phi)
+    
+class RingGeometry:
+    """
+    A class that stores the x, y and phi positions of the probes to be used.
+    In the case of fixed probes, it also containes which probes are function-
+    al. Additional functions to simplify other functions are also here. x, y,
+    phi and p have the same format as trfp.STATION_PROBE_ID for fixed probes.
+    """
+    def __init__(self, x, y, phi, p):
+        """
+        Initialized the class, not much to say here except that p is an array
+        of 0s and 1s where 0 means that such a probe is non-functional and
+        1 means it is functional
+        """
+        self.xpos = x
+        self.ypos = y
+        self.phis = phi
+        self.probes = p
+    
+    def IsReduced(self):
+        """
+        Checks to see whether a geometry instance is reduced. If a geometry
+        class is reduced then all probes are functional. Otherwise it is not
+        reduced.
+        
+        These are some tests:
+        >>> x = [np.arange(5)]
+        >>> y = [np.arange(5)]
+        >>> phi = [np.linspace(0, 360, 5)]
+        >>> p = [np.zeros(5) +1]
+        >>> geom = RingGeometry(x ,y ,phi ,p)
+        >>> geom.IsReduced()
+        True
+        
+        >>> p = [np.array([0,1,1,1,1])]
+        >>> geom = RingGeometry(x ,y ,phi ,p)
+        >>> geom.IsReduced()
+        False
+        """
+        isReduced = True
+        
+        for i in range(len(self.probes)):
+            for j in range(len(self.probes[i])):
+                if self.probes[i][j] != 1:
+                    return False
+        return isReduced
+    
+    def getBadProbes(self):
+        badProbes = []
+        for i in range(len(self.probes)):
+            badProbesInThisStation = np.array([])
+            for j in range(len(self.probes[i])):
+                if not self.probes[i][j]:
+                    badProbesInThisStation = np.append(badProbesInThisStation,j)
+                
+            badProbes.append(badProbesInThisStation.astype(int))
+        return badProbes
+    
+    def getNumberOfBadProbes(self):
+        '''
+        
+        '''
+        N = 0
+        badProbes = self.getBadProbes()
+        for i in range(len(badProbes)):
+            for j in range(len(badProbes[i])):
+                N+=1
+        return N
+                
+    
+    def getNumberOfProbes(self):
+        N = 0
+        for i in range(len(self.probes)):
+            N+= len(self.probes[i])
+        return N
+
+def Drop3dPos(geom): #can make XYPhiProbeArray
+    badProbes = geom.getBadProbes()
+    newx = []
+    newy = []
+    newPhis = []
+    newProbes = []
+    
+    for i in range(len(geom.probes)):
+        if len(badProbes[i]) == len(geom.probes[i]):
+            continue
+        PROBES = geom.probes[i].copy()
+        X = geom.xpos[i].copy()
+        Y = geom.ypos[i].copy()
+        PHI = geom.phis[i].copy()
+        
+        newx.append(np.delete(X, badProbes[i]))
+        newy.append(np.delete(Y, badProbes[i]))
+        newPhis.append(np.delete(PHI, badProbes[i]))
+        newProbes.append(np.delete(PROBES, badProbes[i]))
+    ReducedGeometry = RingGeometry(newx, newy, newPhis, newProbes)
+    return ReducedGeometry, badProbes
+
+def FlattenMoments(lcap, ncap):
+    #First lcap Lmoments and first ncap Az. moments (n=0 counts as 1 too)
+    Ls = np.tile(np.repeat(np.arange(lcap),2), ncap)
+    Ns = np.sort(np.repeat(np.arange(ncap), lcap*2))
+    Ss = np.tile([0,1], lcap*ncap)
+    return np.delete(Ls,np.arange(lcap)*2 +1),\
+           np.delete(Ns,np.arange(lcap)*2 +1),\
+           np.delete(Ss,np.arange(lcap)*2 +1)
+
+def CreateLNSHeader(lcap,ncap): #n1s,l3
+    Ls, Ns, Ss = FlattenMoments(lcap, ncap)
+    Header = []
+    for i in range(len(Ls)):
+        col = 'N' + str(Ns[i])
+        if Ss[i] == 1:
+            col = col + 's,'
+        else:
+            col = col + 'n,'
+        col = col + 'l' + str(Ls[i])
+        Header.append(col)
+    return Header
+
+def InvMultipole(MomentFxn, geom, lcap, ncap, cylindrical = True):
+    Xs = np.concatenate(geom.xpos)
+    Ys = np.concatenate(geom.ypos)
+    Phis = np.concatenate(geom.phis)
+    
+    LNS = np.zeros((2*lcap*ncap - lcap, 3), dtype = int)
+    LNS[:,0], LNS[:,1], LNS[:,2] = FlattenMoments(lcap, ncap)
+    
+    
+    if (len(LNS)>geom.getNumberOfProbes()):
+        print("Not enough probes for the Moments, overfitting...")
+        
+    MULTS = np.array([MomentFxn(LNS[i], Xs, Ys, Phis, cyl = cylindrical)\
+                                for i in range(len(LNS))])
+    
+    MULTS[np.abs(MULTS) < 1.0e-9] = 0
+    
+    INV_MULT = np.linalg.pinv(np.transpose(MULTS))
+    INV_MULT[np.abs(INV_MULT) < 1.0e-9] = 0
+    
+    I = np.dot(INV_MULT, np.transpose(MULTS))
+    I[np.abs(I) < 1.0e-9] = 0
+    print(np.sum(np.abs(I)) - min(len(I), len(I[0])))
+    
+    return INV_MULT
+    
+    
+#put this above ProbeDropsL Also, must make a copy of badProbes
+def Theta3dL(MomentFxn, geom, badProbes, lcap, ncap, cylindrical = True):
+    lenOrigProbes = 378
+    INV_MULT = InvMultipole(MomentFxn, geom, lcap, ncap, cylindrical)
+    
+    inv_mult = np.zeros((len(INV_MULT), lenOrigProbes))
+    k = 0
+    l = 0 #This counts how many iterations have been done in the loop
+    if geom.getNumberOfProbes() < lenOrigProbes:
+        for i in range(len(trfp.STATION_PROBE_ID)):
+            for j in range(len(trfp.STATION_PROBE_ID[i])):
+                if (len(badProbes[i]) > 0) and (j == badProbes[i][0]):
+                    badProbes[i] = np.delete(badProbes[i], [0]) #"skip"
+                    l+=1
+                else:
+                    inv_mult[:,l] = INV_MULT[:,k]
+                    k+=1
+                    l+=1
+        return inv_mult
+    else:
+        return INV_MULT
+
+def ProbeDrops3dL(MomentFxn, geom, lcap, ncap, cylindrical = True):
+    reducedGeometry, badProbes = Drop3dPos(geom)
+    
+    return Theta3dL(MomentFxn, reducedGeometry, badProbes, lcap, ncap, cylindrical=cylindrical)
+
+######################################################################
+########################End of 3D Leg Stuff###########################
+######################################################################
+
+
 # # Convert Tier-1 ROOT files to Pandas data frames
 
 # This function takes a list of run numbers and uses S. Corrodi's gm2 module to read the ROOT files.
